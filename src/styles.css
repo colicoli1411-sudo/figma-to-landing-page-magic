@@ -1,0 +1,385 @@
+@import "tailwindcss" source(none);
+@source "../src";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+/* Poppins is loaded from Google Fonts in __root.tsx (weights 300-700,
+   plus italics). System sans serifs are kept as fallbacks. */
+
+
+@theme inline {
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --radius-2xl: calc(var(--radius) + 8px);
+  --radius-3xl: calc(var(--radius) + 12px);
+  --radius-4xl: calc(var(--radius) + 16px);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-ring-offset-background: var(--background);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+
+  /* Focus Flow brand tokens (from Figma) */
+  --color-bg-primary: #f8f9fb;
+  --color-text-primary: #1d1d23;
+  --color-brand: #6E56CF;
+  --color-brand-soft: #E4DEFC;
+  --color-stroke-brand: rgba(110, 86, 207, 0.5);
+  --color-glow: rgba(170, 153, 236, 0.4);
+
+  /* Refined violet scale (Radix "Violet", built around brand = violet-9 #6E56CF).
+     Overrides Tailwind's default vivid violet so every violet-* utility class
+     picks up the softer, more premium register. Only the steps used in the app
+     are redefined. */
+  --color-violet-100: #EDE9FE;
+  --color-violet-300: #D7CFF9;
+  --color-violet-400: #C4B8F3;
+  --color-violet-500: #8B79E6;
+  --color-violet-700: #6E56CF;
+
+  /* Secondary accent — mint green (matches the "Available" status), reserved
+     for secondary/informational moments (never the primary CTA or nav). */
+  --color-accent-mint: #87D4C4;
+  --color-accent-mint-soft: rgba(135, 212, 196, 0.14);
+  --color-stroke-mint: rgba(135, 212, 196, 0.45);
+  --color-glow-mint: rgba(135, 212, 196, 0.35);
+
+  --font-sans: "Poppins", "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif;
+  /* Editorial display serif for the italic accent words in headings. */
+  --font-serif: "Instrument Serif", Georgia, "Times New Roman", serif;
+}
+
+:root {
+  --radius: 0.625rem;
+  --background: oklch(1 0 0);
+  --foreground: oklch(0.129 0.042 264.695);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.129 0.042 264.695);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.129 0.042 264.695);
+  --primary: oklch(0.208 0.042 265.755);
+  --primary-foreground: oklch(0.984 0.003 247.858);
+  --secondary: oklch(0.968 0.007 247.896);
+  --secondary-foreground: oklch(0.208 0.042 265.755);
+  --muted: oklch(0.968 0.007 247.896);
+  --muted-foreground: oklch(0.554 0.046 257.417);
+  --accent: oklch(0.968 0.007 247.896);
+  --accent-foreground: oklch(0.208 0.042 265.755);
+  --destructive: oklch(0.577 0.245 27.325);
+  --destructive-foreground: oklch(0.984 0.003 247.858);
+  --border: oklch(0.929 0.013 255.508);
+  --input: oklch(0.929 0.013 255.508);
+  --ring: oklch(0.704 0.04 256.788);
+  --chart-1: oklch(0.646 0.222 41.116);
+  --chart-2: oklch(0.6 0.118 184.704);
+  --chart-3: oklch(0.398 0.07 227.392);
+  --chart-4: oklch(0.828 0.189 84.429);
+  --chart-5: oklch(0.769 0.188 70.08);
+  --sidebar: oklch(0.984 0.003 247.858);
+  --sidebar-foreground: oklch(0.129 0.042 264.695);
+  --sidebar-primary: oklch(0.208 0.042 265.755);
+  --sidebar-primary-foreground: oklch(0.984 0.003 247.858);
+  --sidebar-accent: oklch(0.968 0.007 247.896);
+  --sidebar-accent-foreground: oklch(0.208 0.042 265.755);
+  --sidebar-border: oklch(0.929 0.013 255.508);
+  --sidebar-ring: oklch(0.704 0.04 256.788);
+}
+
+.dark {
+  --background: oklch(0.129 0.042 264.695);
+  --foreground: oklch(0.984 0.003 247.858);
+  --card: oklch(0.208 0.042 265.755);
+  --card-foreground: oklch(0.984 0.003 247.858);
+  --popover: oklch(0.208 0.042 265.755);
+  --popover-foreground: oklch(0.984 0.003 247.858);
+  --primary: oklch(0.929 0.013 255.508);
+  --primary-foreground: oklch(0.208 0.042 265.755);
+  --secondary: oklch(0.279 0.041 260.031);
+  --secondary-foreground: oklch(0.984 0.003 247.858);
+  --muted: oklch(0.279 0.041 260.031);
+  --muted-foreground: oklch(0.704 0.04 256.788);
+  --accent: oklch(0.279 0.041 260.031);
+  --accent-foreground: oklch(0.984 0.003 247.858);
+  --destructive: oklch(0.704 0.191 22.216);
+  --destructive-foreground: oklch(0.984 0.003 247.858);
+  --border: oklch(1 0 0 / 10%);
+  --input: oklch(1 0 0 / 15%);
+  --ring: oklch(0.551 0.027 264.364);
+  --chart-1: oklch(0.488 0.243 264.376);
+  --chart-2: oklch(0.696 0.17 162.48);
+  --chart-3: oklch(0.769 0.188 70.08);
+  --chart-4: oklch(0.627 0.265 303.9);
+  --chart-5: oklch(0.645 0.246 16.439);
+  --sidebar: oklch(0.208 0.042 265.755);
+  --sidebar-foreground: oklch(0.984 0.003 247.858);
+  --sidebar-primary: oklch(0.488 0.243 264.376);
+  --sidebar-primary-foreground: oklch(0.984 0.003 247.858);
+  --sidebar-accent: oklch(0.279 0.041 260.031);
+  --sidebar-accent-foreground: oklch(0.984 0.003 247.858);
+  --sidebar-border: oklch(1 0 0 / 10%);
+  --sidebar-ring: oklch(0.551 0.027 264.364);
+}
+
+@layer base {
+  * {
+    border-color: var(--color-border);
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    background-color: var(--color-bg-primary);
+    color: var(--color-text-primary);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    /* Slim brand-tinted scrollbar (Firefox) — keeps position feedback on a
+       long single-page site without a heavy default bar. */
+    scrollbar-width: thin;
+    scrollbar-color: rgba(110, 86, 207, 0.35) transparent;
+  }
+}
+
+/* Slim brand-tinted scrollbar (WebKit/Blink). */
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(110, 86, 207, 0.3);
+  border-radius: 8px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(110, 86, 207, 0.5);
+}
+
+/* Premium idle float for floating cards.
+   Uses the independent `translate` property (not `transform`) so it composes
+   with GSAP's scroll-reveal, which animates `transform` on the same element. */
+@keyframes float-gentle {
+  0%,
+  100% {
+    translate: 0 0;
+  }
+  50% {
+    translate: 0 -5px;
+  }
+}
+
+/* Continuously-rotating conic-gradient border for the ROI calculator card.
+   The @property lets us animate the conic `from` angle so the highlight sweeps
+   clockwise around the card; hovering the card pauses the sweep. */
+@property --glow-angle {
+  syntax: "<angle>";
+  inherits: false;
+  initial-value: 0deg;
+}
+
+@keyframes glow-border-spin {
+  to {
+    --glow-angle: 360deg;
+  }
+}
+
+.glow-border {
+  background: conic-gradient(
+    from var(--glow-angle),
+    rgba(135, 212, 196, 0.85) 0deg,
+    rgba(110, 86, 207, 0.7) 90deg,
+    rgba(196, 184, 243, 0.35) 180deg,
+    rgba(135, 212, 196, 0.15) 270deg,
+    rgba(135, 212, 196, 0.85) 360deg
+  );
+  animation: glow-border-spin 6s linear infinite;
+}
+
+.glow-border:hover {
+  animation-play-state: paused;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .glow-border {
+    animation: none;
+  }
+}
+
+/* Same clockwise conic sweep as .glow-border, but rendered as a ring overlay so
+   it works on translucent cards (where the content can't simply mask the
+   gradient's centre). Reuses the shared --glow-angle spin. */
+.glow-border-ring {
+  padding: 2px;
+  background: conic-gradient(
+    from var(--glow-angle),
+    rgba(135, 212, 196, 0.85) 0deg,
+    rgba(110, 86, 207, 0.7) 90deg,
+    rgba(196, 184, 243, 0.35) 180deg,
+    rgba(135, 212, 196, 0.15) 270deg,
+    rgba(135, 212, 196, 0.85) 360deg
+  );
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  animation: glow-border-spin 6s linear infinite;
+}
+
+/* Opaque variant for dark cards. The base ring's transparent sweep stops let a
+   near-black card background show through as a hard black edge under the glow;
+   full-opacity stops keep the rotating multicolour glow while hiding the card
+   behind it. (Defined after .glow-border-ring so it wins when both are set.) */
+.glow-border-ring--solid {
+  background: conic-gradient(
+    from var(--glow-angle),
+    rgb(135, 212, 196) 0deg,
+    rgb(110, 86, 207) 90deg,
+    rgb(196, 184, 243) 180deg,
+    rgb(135, 212, 196) 270deg,
+    rgb(135, 212, 196) 360deg
+  );
+}
+
+/* Pause the sweep while the card is hovered (matches the ROI card). */
+.glow-card:hover .glow-border-ring {
+  animation-play-state: paused;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .glow-border-ring {
+    animation: none;
+  }
+}
+
+/* Animated glow that sweeps horizontally along a 2px line — the 1-D analogue of
+   the rotating card border glow. A cyan→violet highlight travels across the
+   line. Shared by the FAQ top line and the header nav underlines. */
+@keyframes glow-line-sweep {
+  from {
+    background-position: -60% 0;
+  }
+  to {
+    background-position: 160% 0;
+  }
+}
+
+.faq-glow-line {
+  background-image: linear-gradient(
+    90deg,
+    rgba(135, 212, 196, 0) 0%,
+    rgba(135, 212, 196, 0.85) 40%,
+    rgba(196, 184, 243, 0.95) 55%,
+    rgba(110, 86, 207, 0.85) 70%,
+    rgba(110, 86, 207, 0) 100%
+  );
+  background-size: 55% 100%;
+  background-repeat: no-repeat;
+  box-shadow: 0 0 12px rgba(110, 86, 207, 0.6), 0 0 12px rgba(135, 212, 196, 0.35);
+  opacity: 0;
+  transition: opacity 0.4s ease;
+}
+
+.group:hover > .faq-glow-line,
+.faq-glow-line--open {
+  opacity: 1;
+  animation: glow-line-sweep 2s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .group:hover > .faq-glow-line,
+  .faq-glow-line--open {
+    animation: none;
+  }
+}
+
+/* Header nav underline — the same cyan→violet sweep layered over the 2px bar,
+   matching the card/FAQ glow family. Shown while the bar is filling (hover) or
+   fully filled (active). The sweep rides on the bar span, so it scales with it. */
+.nav-underline-glow::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background-image: linear-gradient(
+    90deg,
+    rgba(135, 212, 196, 0) 0%,
+    rgba(135, 212, 196, 0.9) 40%,
+    rgba(196, 184, 243, 1) 55%,
+    rgba(110, 86, 207, 0.9) 70%,
+    rgba(110, 86, 207, 0) 100%
+  );
+  background-size: 55% 100%;
+  background-repeat: no-repeat;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+/* Fully filled (active) bar: sweep runs continuously. */
+.nav-underline-glow--active::after {
+  opacity: 1;
+  animation: glow-line-sweep 2s linear infinite;
+}
+
+/* Filling (hover) bar: sweep fades in and runs while the link is hovered. */
+.group:hover .nav-underline-glow--hover::after {
+  opacity: 1;
+  animation: glow-line-sweep 2s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nav-underline-glow--active::after,
+  .group:hover .nav-underline-glow--hover::after {
+    animation: none;
+  }
+}
+
+/* CardSwap 3D stack */
+.card-swap-container {
+  perspective: 900px;
+  overflow: visible;
+}
+.card {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  border-radius: 16px;
+  background: #0a0a0e;
+  transform-style: preserve-3d;
+  will-change: transform;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}

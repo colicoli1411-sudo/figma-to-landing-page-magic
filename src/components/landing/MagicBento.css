@@ -1,0 +1,310 @@
+:root {
+  --purple-glow: rgba(110, 86, 207, 0.4);
+  --border-color: rgba(255, 255, 255, 0.05);
+  /* Violet-tinted near-black — matches the site's dark family (ROI panel,
+     Contact card, Footer) instead of a clashing pure-neutral dark. */
+  --background-dark: #14101d;
+}
+
+.card-grid {
+  display: grid;
+  gap: 1.5rem;
+  padding: 1rem;
+  width: 100%;
+}
+
+.magic-bento-card {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  position: relative;
+  min-height: 380px;
+  width: 100%;
+  padding: 2.5rem;
+  border-radius: 24px;
+  border: 1px solid var(--border-color);
+  background: var(--background-dark) !important;
+  color: white;
+  overflow: hidden;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  z-index: 10;
+
+  --glow-x: 50%;
+  --glow-y: 50%;
+  --glow-intensity: 0;
+  --glow-radius: 250px;
+}
+
+.magic-bento-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+}
+
+.magic-bento-card--border-glow::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  padding: 2px;
+  border-radius: inherit;
+  background: radial-gradient(
+    var(--glow-radius) circle at var(--glow-x) var(--glow-y),
+    rgba(196, 184, 243, calc(var(--glow-intensity) * 1)) 0%,
+    rgba(110, 86, 207, calc(var(--glow-intensity) * 0.85)) 22%,
+    rgba(135, 212, 196, calc(var(--glow-intensity) * 0.5)) 48%,
+    transparent 72%
+  );
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+          mask-composite: exclude;
+  pointer-events: none;
+  opacity: 1;
+  z-index: 20;
+}
+
+.magic-bento-card--border-glow:hover::after {
+  opacity: 1;
+}
+
+.magic-bento-card--border-glow:hover {
+  box-shadow: 0 0 40px var(--purple-glow), 0 4px 20px rgba(0, 0, 0, 0.4);
+}
+
+/* Featured ("Most Popular") card — visibly elevated above its siblings:
+   brand-violet border, a soft violet bloom, and a slightly lifted surface. */
+.magic-bento-card--featured {
+  border-color: rgba(170, 153, 236, 0.45);
+  background: #1a1526 !important;
+  box-shadow: 0 24px 60px -24px rgba(110, 86, 207, 0.45);
+}
+
+@media (min-width: 1024px) {
+  .magic-bento-card--featured {
+    transform: scale(1.03);
+  }
+  .magic-bento-card--featured:hover {
+    transform: translateY(-4px) scale(1.03);
+  }
+}
+
+.magic-bento-card__content {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  position: relative;
+  z-index: 30;
+}
+
+.magic-bento-card__label {
+  display: inline-block;
+  align-self: flex-start;
+  padding: 0.25rem 0.75rem;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 99px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: #EDE9FE;
+  margin-bottom: 1rem;
+}
+
+.magic-bento-card__title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin: 0 0 0.5rem;
+  color: #fff;
+}
+
+.magic-bento-card__price {
+  font-size: 3rem;
+  font-weight: 700;
+  margin: 0.25rem 0 0.5rem;
+  color: #fff;
+  line-height: 1;
+}
+
+.magic-bento-card__description {
+  color: rgba(255, 255, 255, 0.6);
+  margin: 0 0 1.25rem;
+  font-size: 0.95rem;
+}
+
+.magic-bento-card__features {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  flex: 1;
+}
+
+.magic-bento-card__features li {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 0.9rem;
+}
+
+.magic-bento-card__check {
+  width: 16px;
+  height: 16px;
+  color: #C4B8F3;
+  flex-shrink: 0;
+}
+
+.magic-bento-card__cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: transform 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
+  border: 1px solid transparent;
+}
+
+.magic-bento-card__cta:active {
+  transform: scale(0.98);
+}
+
+.magic-bento-card__cta:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(196, 184, 243, 0.6);
+}
+
+.magic-bento-card__cta--outline {
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+  border-color: rgba(255, 255, 255, 0.25);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  box-shadow: 0 0 24px rgba(170, 153, 236, 0.35);
+}
+
+.magic-bento-card__cta--outline:hover {
+  background: #6E56CF;
+  border-color: #6E56CF;
+  transform: scale(1.02);
+}
+
+.magic-bento-card__cta--solid-purple {
+  background: linear-gradient(135deg, #6E56CF 0%, #654DC4 100%);
+  color: #fff;
+  box-shadow: 0 8px 24px rgba(110, 86, 207, 0.35);
+}
+
+.magic-bento-card__cta--solid-purple:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 12px 30px rgba(110, 86, 207, 0.5);
+}
+
+.magic-bento-card__particles {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+  z-index: 15;
+}
+
+.magic-bento-particle {
+  position: absolute;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: rgba(110, 86, 207, 0.9);
+  box-shadow: 0 0 8px rgba(110, 86, 207, 0.8);
+  animation: bento-particle-float 2.6s ease-out forwards;
+  pointer-events: none;
+}
+
+@keyframes bento-particle-float {
+  0% {
+    transform: translate(0, 0) scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(var(--dx, 0), var(--dy, -80px)) scale(0.4);
+    opacity: 0;
+  }
+}
+
+.global-spotlight {
+  position: fixed;
+  width: 600px;
+  height: 600px;
+  border-radius: 50%;
+  pointer-events: none;
+  mix-blend-mode: screen;
+  will-change: transform, opacity;
+  z-index: 50 !important;
+  opacity: 0;
+  transition: opacity 0.25s ease;
+  background: radial-gradient(circle,
+    rgba(110, 86, 207, 0.3) 0%,
+    rgba(110, 86, 207, 0.15) 20%,
+    rgba(110, 86, 207, 0.05) 40%,
+    transparent 60%
+  );
+}
+
+.bento-section {
+  position: relative;
+  user-select: none;
+}
+
+@media (min-width: 640px) and (max-width: 1023px) {
+  /* Tablet: single column, but let the card grow with the viewport instead of
+     being pinned to a small fixed width. Type + spacing scale up in step so the
+     larger card stays comfortably filled rather than looking empty. */
+  .card-grid {
+    max-width: min(92vw, 660px);
+    margin: 0 auto;
+  }
+  .magic-bento-card {
+    min-height: 460px;
+    padding: 3rem 3.25rem;
+  }
+  .magic-bento-card__label {
+    font-size: 0.8rem;
+    margin-bottom: 1.25rem;
+  }
+  .magic-bento-card__title {
+    font-size: 1.75rem;
+  }
+  .magic-bento-card__price {
+    font-size: 3.5rem;
+  }
+  .magic-bento-card__description {
+    font-size: 1.05rem;
+    margin-bottom: 1.5rem;
+  }
+  .magic-bento-card__features {
+    gap: 0.85rem;
+    margin-bottom: 1.75rem;
+  }
+  .magic-bento-card__features li {
+    font-size: 1rem;
+  }
+  .magic-bento-card__check {
+    width: 18px;
+    height: 18px;
+  }
+  .magic-bento-card__cta {
+    padding: 0.9rem 1rem;
+    font-size: 1.05rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .card-grid {
+    grid-template-columns: repeat(3, 1fr);
+    max-width: 76rem;
+    margin: 0 auto;
+  }
+}

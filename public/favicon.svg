@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 104 104" fill="none">
+  <!-- FocusFlow favicon — "Focus Lock" bracket mark (no background tile),
+       heavier strokes + bigger cyan nucleus for 16px legibility. -->
+  <path d="M8 33 V20 C8 13.4 13.4 8 20 8 H33" stroke="#7C3AED" stroke-width="14" stroke-linecap="round"></path>
+  <path d="M71 8 H84 C90.6 8 96 13.4 96 20 V33" stroke="#7C3AED" stroke-width="14" stroke-linecap="round"></path>
+  <path d="M96 71 V84 C96 90.6 90.6 96 84 96 H71" stroke="#7C3AED" stroke-width="14" stroke-linecap="round"></path>
+  <path d="M33 96 H20 C13.4 96 8 90.6 8 84 V71" stroke="#7C3AED" stroke-width="14" stroke-linecap="round"></path>
+  <circle cx="52" cy="52" r="17" fill="#7C3AED"></circle>
+</svg>

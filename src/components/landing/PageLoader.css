@@ -1,0 +1,166 @@
+/* Page-load intro overlay — see PageLoader.tsx.
+   Keyframes and timing are lifted verbatim from the "FocusFlow Loading
+   Animation" Claude Design file. The overlay sits above everything (Header
+   z-50, page blur ~z-140/1000) and fades out to reveal the untouched site. */
+
+.ldr-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 2147483000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #fafbfd;
+  pointer-events: none;
+  overflow: hidden;
+  /* 5 · overlay fades out, revealing the site underneath */
+  animation: ldr-overlay-out 1.15s ease 3.7s both;
+}
+
+/* 1 · the mark fades in */
+.ldr-mark {
+  position: relative;
+  width: 128px;
+  height: 128px;
+  animation: ldr-mark-in 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* 2 · brackets "hunt focus" — autofocus adjusting */
+.ldr-hunt {
+  position: absolute;
+  inset: 0;
+  animation: ldr-hunt 1.6s cubic-bezier(0.45, 0, 0.25, 1) both;
+}
+
+.ldr-corner {
+  position: absolute;
+  width: 34px;
+  height: 34px;
+}
+
+/* 3 · brackets fly out to the page corners */
+.ldr-tl {
+  top: 0;
+  left: 0;
+  border-top: 8px solid #6E56CF;
+  border-left: 8px solid #6E56CF;
+  border-radius: 10px 0 0 0;
+  animation: ldr-fly-tl 0.7s cubic-bezier(0.65, 0, 0.35, 1) 1.55s both;
+}
+.ldr-tr {
+  top: 0;
+  right: 0;
+  border-top: 8px solid #6E56CF;
+  border-right: 8px solid #6E56CF;
+  border-radius: 0 10px 0 0;
+  animation: ldr-fly-tr 0.7s cubic-bezier(0.65, 0, 0.35, 1) 1.55s both;
+}
+.ldr-bl {
+  bottom: 0;
+  left: 0;
+  border-bottom: 8px solid #6E56CF;
+  border-left: 8px solid #6E56CF;
+  border-radius: 0 0 0 10px;
+  animation: ldr-fly-bl 0.7s cubic-bezier(0.65, 0, 0.35, 1) 1.55s both;
+}
+.ldr-br {
+  bottom: 0;
+  right: 0;
+  border-bottom: 8px solid #6E56CF;
+  border-right: 8px solid #6E56CF;
+  border-radius: 0 0 10px 0;
+  animation: ldr-fly-br 0.7s cubic-bezier(0.65, 0, 0.35, 1) 1.55s both;
+}
+
+/* nucleus (matches the "Focus Lock" logo mark — site-black dot): pulses, then
+   bursts into the title */
+.ldr-dot {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 30px;
+  height: 30px;
+  margin: -15px 0 0 -15px;
+  border-radius: 50%;
+  background: #1d1d23;
+  box-shadow: 0 0 24px rgba(29, 29, 35, 0.35);
+  animation: ldr-dot-pulse 1.55s ease-in-out both,
+    ldr-burst 0.6s cubic-bezier(0.5, 0, 0.75, 0.4) 1.55s both;
+}
+
+/* 4 · wordmark resolves where the dot was — outer wrap only centers so the
+   inner span's animations never override the centering transform */
+.ldr-word-wrap {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+.ldr-word {
+  display: inline-block;
+  font-family: "Poppins", system-ui, sans-serif;
+  font-size: 58px;
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  color: #1d1d23;
+  white-space: nowrap;
+  transform-origin: center;
+  animation: ldr-word-in 1s cubic-bezier(0.22, 1, 0.36, 1) 2.05s both,
+    ldr-word-out 1.1s cubic-bezier(0.65, 0, 0.35, 1) 3.55s forwards;
+}
+.ldr-word-accent {
+  color: #6E56CF;
+}
+
+/* ── keyframes ─────────────────────────────────────────────────────────── */
+@keyframes ldr-mark-in {
+  from { opacity: 0; transform: scale(0.94); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes ldr-hunt {
+  0% { transform: scale(1.1); }
+  30% { transform: scale(0.92); }
+  55% { transform: scale(1.05); }
+  80% { transform: scale(0.97); }
+  100% { transform: scale(1); }
+}
+@keyframes ldr-dot-pulse {
+  0%, 100% { transform: scale(1); }
+  35% { transform: scale(1.14); }
+  70% { transform: scale(0.94); }
+}
+
+@keyframes ldr-fly-tl { 60% { opacity: 1; } 100% { transform: translate(-56vw, -56vh); opacity: 0; } }
+@keyframes ldr-fly-tr { 60% { opacity: 1; } 100% { transform: translate(56vw, -56vh); opacity: 0; } }
+@keyframes ldr-fly-bl { 60% { opacity: 1; } 100% { transform: translate(-56vw, 56vh); opacity: 0; } }
+@keyframes ldr-fly-br { 60% { opacity: 1; } 100% { transform: translate(56vw, 56vh); opacity: 0; } }
+
+@keyframes ldr-burst { to { transform: scale(9); opacity: 0; } }
+@keyframes ldr-word-in {
+  from { opacity: 0; transform: translateY(8px); letter-spacing: 0.04em; filter: blur(4px); }
+  to { opacity: 1; transform: translateY(0); letter-spacing: -0.03em; filter: blur(0px); }
+}
+@keyframes ldr-word-out {
+  to { opacity: 0; transform: scale(6); filter: blur(2px); }
+}
+@keyframes ldr-overlay-out {
+  0%, 40% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+/* Reduced motion: scoped to the loader only (never the whole page). The
+   overlay is torn down immediately by PageLoader, so no animation is needed. */
+@media (prefers-reduced-motion: reduce) {
+  .ldr-overlay,
+  .ldr-mark,
+  .ldr-hunt,
+  .ldr-tl,
+  .ldr-tr,
+  .ldr-bl,
+  .ldr-br,
+  .ldr-dot,
+  .ldr-word {
+    animation: none !important;
+  }
+}

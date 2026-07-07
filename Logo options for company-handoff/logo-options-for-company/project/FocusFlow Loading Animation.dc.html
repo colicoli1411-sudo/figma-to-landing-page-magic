@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    body { margin: 0; background: #fafbfd; font-family: "Poppins", system-ui, sans-serif; overflow: hidden; }
+
+    /* 1 · mark fades in */
+    @keyframes ldr-mark-in { from { opacity: 0; transform: scale(0.94); } to { opacity: 1; transform: scale(1); } }
+
+    /* 2 · brackets "hunt focus" — autofocus adjusting */
+    @keyframes ldr-hunt {
+      0% { transform: scale(1.10); }
+      30% { transform: scale(0.92); }
+      55% { transform: scale(1.05); }
+      80% { transform: scale(0.97); }
+      100% { transform: scale(1); }
+    }
+    @keyframes ldr-dot-pulse {
+      0%, 100% { transform: scale(1); }
+      35% { transform: scale(1.14); }
+      70% { transform: scale(0.94); }
+    }
+
+    /* 3 · brackets fly out to the page corners */
+    @keyframes ldr-fly-tl { 60% { opacity: 1; } 100% { transform: translate(-56vw, -56vh); opacity: 0; } }
+    @keyframes ldr-fly-tr { 60% { opacity: 1; } 100% { transform: translate(56vw, -56vh); opacity: 0; } }
+    @keyframes ldr-fly-bl { 60% { opacity: 1; } 100% { transform: translate(-56vw, 56vh); opacity: 0; } }
+    @keyframes ldr-fly-br { 60% { opacity: 1; } 100% { transform: translate(56vw, 56vh); opacity: 0; } }
+
+    /* 4 · cyan nucleus bursts, wordmark resolves out of it */
+    @keyframes ldr-burst { to { transform: scale(9); opacity: 0; } }
+    @keyframes ldr-word-in {
+      from { opacity: 0; transform: translateY(8px); letter-spacing: 0.04em; filter: blur(4px); }
+      to { opacity: 1; transform: translateY(0); letter-spacing: -0.03em; filter: blur(0px); }
+    }
+
+    /* 5 · we zoom INTO the wordmark — it scales up and fades, and the whole
+           site emerges from within it. NOTE: `to`-only keyframe + fill
+           forwards, so it has no backwards-fill and cannot show the word
+           before ldr-word-in runs. */
+    @keyframes ldr-word-out {
+      to { opacity: 0; transform: scale(6); filter: blur(2px); }
+    }
+    @keyframes ldr-overlay-out { 0%, 40% { opacity: 1; } 100% { opacity: 0; } }
+    @keyframes ldr-site-in {
+      from { filter: blur(16px); transform: scale(1.08); opacity: 0; }
+      60% { opacity: 1; }
+      to { filter: blur(0px); transform: scale(1); opacity: 1; }
+    }
+
+    @media (prefers-reduced-motion: reduce) { * { animation: none !important; } }
+  </style>
+</helmet>
+
+<div style="position:relative; width:100%; height:100vh; overflow:hidden; background:#fafbfd;">
+
+  <!-- ================= SITE (revealed underneath) ================= -->
+  <div style="position:absolute; inset:0; transform-origin:center; animation:ldr-site-in 1.3s cubic-bezier(0.22,1,0.36,1) 3.75s both; background:#f8f9fb;">
+    <!-- soft brand glow -->
+    <div style="position:absolute; top:-180px; left:50%; transform:translateX(-50%); width:820px; height:520px; border-radius:50%; background:radial-gradient(closest-side, rgba(139,92,246,0.16), rgba(139,92,246,0)); pointer-events:none;"></div>
+
+    <!-- header pill -->
+    <div style="position:absolute; top:16px; left:50%; transform:translateX(-50%); width:min(1180px, calc(100% - 48px)); display:flex; align-items:center; justify-content:space-between; gap:16px; padding:10px 28px; border-radius:20px; border:1px solid rgba(124,58,237,0.5); background:rgba(255,255,255,0.7); backdrop-filter:blur(12px); box-sizing:border-box;">
+      <span style="display:inline-flex; align-items:center; gap:9px;">
+        <svg width="26" height="26" viewBox="0 0 104 104" fill="none">
+          <path d="M7 32 V19 C7 12.4 12.4 7 19 7 H32" stroke="#7C3AED" stroke-width="11" stroke-linecap="round"></path>
+          <path d="M72 7 H85 C91.6 7 97 12.4 97 19 V32" stroke="#7C3AED" stroke-width="11" stroke-linecap="round"></path>
+          <path d="M97 72 V85 C97 91.6 91.6 97 85 97 H72" stroke="#7C3AED" stroke-width="11" stroke-linecap="round"></path>
+          <path d="M32 97 H19 C12.4 97 7 91.6 7 85 V72" stroke="#7C3AED" stroke-width="11" stroke-linecap="round"></path>
+          <circle cx="52" cy="52" r="14" fill="#38BDF8"></circle>
+        </svg>
+        <span style="font-size:19px; font-weight:600; letter-spacing:-0.02em; color:#1d1d23;">Focus<span style="color:#7c3aed;">Flow</span></span>
+      </span>
+      <span style="display:flex; gap:34px; font-size:14px; font-weight:500; color:#1d1d23;">
+        <span>Features</span><span>Customers</span><span>Pricing</span><span>FAQ</span>
+      </span>
+      <span style="display:inline-flex; align-items:center; border-radius:12px; background:#7c3aed; padding:8px 16px; font-size:14px; font-weight:600; color:#fff; filter:drop-shadow(0 0 10px rgba(139,92,246,0.3));">Start free trial</span>
+    </div>
+
+    <!-- hero copy -->
+    <div style="position:absolute; top:0; left:0; right:0; bottom:0; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:28px; padding:0 24px; text-align:center;">
+      <div>
+        <div style="font-size:34px; font-weight:300; color:#3d3d4a; letter-spacing:-0.02em; line-height:1.1;">Stop busywork.</div>
+        <div style="margin-top:10px; font-size:72px; font-weight:700; color:#171717; letter-spacing:-0.02em; line-height:0.98;">Start focused work.</div>
+      </div>
+      <p style="margin:0; max-width:620px; font-size:17px; font-weight:300; line-height:1.7; color:#737380;">The first multiplayer focus platform for modern tech teams. Sync deep work states, auto-mute distractions, and protect your team's most valuable asset: <span style="font-weight:400; color:#3d3d4a;">their time</span>.</p>
+      <div style="display:flex; gap:22px; align-items:center;">
+        <span style="display:inline-flex; align-items:center; border-radius:12px; background:#7c3aed; padding:10px 20px; font-size:15px; font-weight:600; color:#fff; filter:drop-shadow(0 0 10px rgba(139,92,246,0.3));">Start free trial →</span>
+        <span style="display:inline-flex; align-items:center; border-radius:12px; border:1px solid rgba(124,58,237,0.5); background:rgba(255,255,255,0.4); padding:10px 20px; font-size:15px; font-weight:600; color:#1d1d23; box-shadow:0 0 16px rgba(139,92,246,0.25);">▶ See how it works</span>
+      </div>
+      <span style="font-size:13px; font-weight:500; color:#737380;">14-day free trial · Cancel anytime</span>
+    </div>
+  </div>
+
+  <!-- ================= LOADER OVERLAY ================= -->
+  <sc-if value="{{ playing }}" hint-placeholder-val="{{ true }}">
+    <div style="position:absolute; inset:0; z-index:50; background:#fafbfd; display:flex; align-items:center; justify-content:center; pointer-events:none; animation:ldr-overlay-out 1.15s ease 3.7s both;">
+
+      <!-- the mark: brackets hunt focus, then fly out -->
+      <div style="position:relative; width:128px; height:128px; animation:ldr-mark-in 0.5s cubic-bezier(0.22,1,0.36,1) both;">
+        <div style="position:absolute; inset:0; animation:ldr-hunt 1.6s cubic-bezier(0.45,0,0.25,1) both;">
+          <span style="position:absolute; top:0; left:0; width:34px; height:34px; border-top:8px solid #7c3aed; border-left:8px solid #7c3aed; border-radius:10px 0 0 0; animation:ldr-fly-tl 0.7s cubic-bezier(0.65,0,0.35,1) 1.55s both;"></span>
+          <span style="position:absolute; top:0; right:0; width:34px; height:34px; border-top:8px solid #7c3aed; border-right:8px solid #7c3aed; border-radius:0 10px 0 0; animation:ldr-fly-tr 0.7s cubic-bezier(0.65,0,0.35,1) 1.55s both;"></span>
+          <span style="position:absolute; bottom:0; left:0; width:34px; height:34px; border-bottom:8px solid #7c3aed; border-left:8px solid #7c3aed; border-radius:0 0 0 10px; animation:ldr-fly-bl 0.7s cubic-bezier(0.65,0,0.35,1) 1.55s both;"></span>
+          <span style="position:absolute; bottom:0; right:0; width:34px; height:34px; border-bottom:8px solid #7c3aed; border-right:8px solid #7c3aed; border-radius:0 0 10px 0; animation:ldr-fly-br 0.7s cubic-bezier(0.65,0,0.35,1) 1.55s both;"></span>
+        </div>
+        <!-- cyan nucleus: pulses, then bursts into the title -->
+        <div style="position:absolute; top:50%; left:50%; width:30px; height:30px; margin:-15px 0 0 -15px; border-radius:50%; background:#7c3aed; box-shadow:0 0 24px rgba(124,58,237,0.45); animation:ldr-dot-pulse 1.55s ease-in-out both, ldr-burst 0.6s cubic-bezier(0.5,0,0.75,0.4) 1.55s both;"></div>
+      </div>
+
+      <!-- wordmark resolves where the dot was — outer div only centers
+           (the animations live on the inner span so they never override
+           the centering transform) -->
+      <div style="position:absolute; top:50%; left:50%; transform:translate(-50%,-50%);">
+        <span style="display:inline-block; font-family:'Poppins', sans-serif; font-size:58px; font-weight:600; letter-spacing:-0.03em; color:#1d1d23; white-space:nowrap; transform-origin:center; animation:ldr-word-in 1.0s cubic-bezier(0.22,1,0.36,1) 2.05s both, ldr-word-out 1.1s cubic-bezier(0.65,0,0.35,1) 3.55s forwards;">Focus<span style="color:#7c3aed;">Flow</span></span>
+      </div>
+
+    </div>
+  </sc-if>
+
+  <!-- replay -->
+  <button onClick="{{ replay }}" style="position:absolute; right:20px; bottom:20px; z-index:60; display:inline-flex; align-items:center; gap:8px; padding:9px 16px; border-radius:999px; border:1px solid rgba(124,58,237,0.35); background:rgba(255,255,255,0.8); backdrop-filter:blur(8px); font-family:'Poppins'; font-size:13px; font-weight:500; color:#7c3aed; cursor:pointer;" style-hover="background:#ffffff; border-color:#7c3aed;">
+    ↺ Replay
+  </button>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = { playing: true };
+  renderVals() {
+    return {
+      playing: this.state.playing,
+      replay: () => {
+        this.setState({ playing: false });
+        setTimeout(() => this.setState({ playing: true }), 60);
+      },
+    };
+  }
+}
+</script>
+</body>
+</html>
