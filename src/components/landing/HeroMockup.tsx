@@ -28,6 +28,7 @@ import {
   Bell,
   Moon,
 } from "lucide-react";
+import { Logo } from "./Logo";
 
 /**
  * Recreation of the full Focus Flow app mockup from the Figma hero
@@ -432,7 +433,7 @@ export function HeroMockup({
         {/* Inner app panel */}
         <div
           className="overflow-hidden rounded-[20px]"
-          style={{ background: "#f2ecfe" }}
+          style={{ background: "#EDE9FE" }}
         >
           <div className="flex">
             {/* Full labelled sidebar */}
@@ -540,17 +541,9 @@ const NAV_ITEMS = [
 function Sidebar() {
   return (
     <aside className="hidden w-[160px] shrink-0 flex-col border-r border-[#e5e7eb] bg-white lg:flex">
-      {/* Logo */}
-      <div className="flex items-center justify-center gap-1 px-4 py-5">
-        <span className="text-[20px] font-bold leading-none text-[#6E56CF]">
-          [
-        </span>
-        <span className="text-[18px] font-bold leading-none text-[#0b0b0b]">
-          Focus<span className="text-[#8B79E6]">Flow</span>
-        </span>
-        <span className="text-[20px] font-bold leading-none text-[#6E56CF]">
-          ]
-        </span>
+      {/* Logo — the real FocusFlow lockup (focus-lock brackets + wordmark). */}
+      <div className="flex items-center justify-center px-4 py-5">
+        <Logo size={22} />
       </div>
 
       {/* Nav */}
@@ -1138,7 +1131,7 @@ function TeamFlowCard({
               key={m.name}
               className={`${
                 i >= 3 ? "hidden md:flex" : "flex"
-              } items-center gap-3 rounded-[16px] p-3 ${isYou ? "bg-[#f2ecfe]" : ""}`}
+              } items-center gap-3 rounded-[16px] p-3 ${isYou ? "bg-[#EDE9FE]" : ""}`}
             >
               {m.avatar ? (
                 <img

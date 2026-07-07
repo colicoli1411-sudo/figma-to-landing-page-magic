@@ -28,7 +28,7 @@ const TESTIMONIALS: Testimonial[] = [
     metricLabel: "Less context switching",
     metricValue: "41%",
     quote:
-      "\"Our sprint flow became calmer. Fewer context switches, fewer random calls, and much better deep work habits across the entire R&D department.\"",
+      '"Our sprint flow became calmer. Fewer context switches, fewer random calls, and much better deep work habits across the entire R&D department."',
     name: "Yonatan Levi",
     role: "Engineering Manager, DevLayer",
     avatar: "https://i.pravatar.cc/150?u=yonatan",
@@ -38,7 +38,7 @@ const TESTIMONIALS: Testimonial[] = [
     metricLabel: "Weekly focus time",
     metricValue: "+8.5h",
     quote:
-      "\"The biggest win was team visibility. Everyone knows who is in focus mode, without awkward status updates. It builds stronger boundaries naturally.\"",
+      '"The biggest win was team visibility. Everyone knows who is in focus mode, without awkward status updates. It builds stronger boundaries naturally."',
     name: "Daniel Reed",
     role: "VP Engineering, CloudNest",
     avatar: "https://i.pravatar.cc/150?u=daniel",
@@ -48,7 +48,7 @@ const TESTIMONIALS: Testimonial[] = [
     metricLabel: "More predictable focus blocks",
     metricValue: "2×",
     quote:
-      "\"FocusFlow helped us protect maker time without disconnecting the team. Urgent things still get through, but everything else waits its turn.\"",
+      '"FocusFlow helped us protect maker time without disconnecting the team. Urgent things still get through, but everything else waits its turn."',
     name: "Michael Stern",
     role: "Product Lead, Northbase",
     avatar: "https://i.pravatar.cc/150?u=michael",
@@ -58,7 +58,7 @@ const TESTIMONIALS: Testimonial[] = [
     metricLabel: "Faster delivery cycles",
     metricValue: "27%",
     quote:
-      "\"Before FocusFlow, our team was always online but rarely focused. Now focus time is part of the company rhythm and our roadmap actually moves.\"",
+      '"Before FocusFlow, our team was always online but rarely focused. Now focus time is part of the company rhythm and our roadmap actually moves."',
     name: "Adam Brooks",
     role: "Startup Founder, LaunchGrid",
     avatar: "https://i.pravatar.cc/150?u=adam",
@@ -68,7 +68,7 @@ const TESTIMONIALS: Testimonial[] = [
     metricLabel: "Protected weekly focus",
     metricValue: "18h",
     quote:
-      "\"I like that it does not feel like surveillance. It feels like a shared agreement to respect people's focus and trust them with their own time.\"",
+      '"I like that it does not feel like surveillance. It feels like a shared agreement to respect people\'s focus and trust them with their own time."',
     name: "Eli Morgan",
     role: "DevOps Lead, InfraForge",
     avatar: "https://i.pravatar.cc/150?u=eli-morgan",
@@ -78,7 +78,7 @@ const TESTIMONIALS: Testimonial[] = [
     metricLabel: "Deep work sessions",
     metricValue: "3×",
     quote:
-      "\"Our designers finally have space to think. FocusFlow turned focus time into a real team ritual instead of a personal struggle.\"",
+      '"Our designers finally have space to think. FocusFlow turned focus time into a real team ritual instead of a personal struggle."',
     name: "Noa Bar",
     role: "Design Director, PixelForge",
     avatar: "https://i.pravatar.cc/150?u=noa",
@@ -88,7 +88,7 @@ const TESTIMONIALS: Testimonial[] = [
     metricLabel: "Meetings reduced",
     metricValue: "32%",
     quote:
-      "\"We cut a third of our meetings just by making focus blocks visible. People trust the calendar again and async actually works.\"",
+      '"We cut a third of our meetings just by making focus blocks visible. People trust the calendar again and async actually works."',
     name: "Ravi Patel",
     role: "Head of Product, NimbusOps",
     avatar: "https://i.pravatar.cc/150?u=ravi",
@@ -98,7 +98,7 @@ const TESTIMONIALS: Testimonial[] = [
     metricLabel: "Head-down coding time",
     metricValue: "+12h",
     quote:
-      "\"My team gets a full extra day of real engineering work every week. FocusFlow made deep work the default, not the exception.\"",
+      '"My team gets a full extra day of real engineering work every week. FocusFlow made deep work the default, not the exception."',
     name: "Sara Klein",
     role: "Staff Engineer, ByteHarbor",
     avatar: "https://i.pravatar.cc/150?u=sara",
@@ -109,12 +109,7 @@ function Stars({ count }: { count: number }) {
   return (
     <div className="flex items-center gap-1">
       {Array.from({ length: count }).map((_, i) => (
-        <Star
-          key={i}
-          className="w-4 h-4 text-neutral-900"
-          fill="currentColor"
-          strokeWidth={0}
-        />
+        <Star key={i} className="w-4 h-4 text-neutral-900" fill="currentColor" strokeWidth={0} />
       ))}
     </div>
   );
@@ -124,7 +119,7 @@ function TestimonialCard({ t, isActive }: { t: Testimonial; isActive?: boolean }
   return (
     <article
       tabIndex={0}
-      className={`glow-card relative flex flex-col justify-between w-full h-full p-8 rounded-[32px] overflow-hidden backdrop-blur-xl transition-all duration-500 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-400 focus-visible:ring-offset-2 ${
+      className={`glow-card relative flex flex-col justify-between w-full h-full p-6 sm:p-8 rounded-[32px] overflow-hidden backdrop-blur-xl transition-all duration-500 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-400 focus-visible:ring-offset-2 ${
         isActive
           ? "bg-white/55 shadow-[0_28px_70px_-24px_rgba(110,86,207,0.45),0_10px_30px_-16px_rgba(30,27,75,0.18)]"
           : "bg-white/40 border border-white shadow-[0_8px_32px_rgba(0,10,30,0.04)]"
@@ -141,11 +136,12 @@ function TestimonialCard({ t, isActive }: { t: Testimonial; isActive?: boolean }
                 "radial-gradient(120% 85% at 50% -12%, rgba(215,207,249,0.55) 0%, rgba(237,233,254,0.30) 34%, rgba(255,255,255,0) 68%), linear-gradient(135deg, rgba(245,243,255,0.65) 0%, rgba(237,233,254,0.32) 46%, rgba(224,231,255,0.48) 100%)",
             }}
           />
-          {/* Rotating conic glow border — same clockwise sweep as the ROI card,
-              rendered as a masked ring so it reads on the translucent card. */}
+          {/* Static soft brand edge on the active card — the rotating glow is
+              reserved for buttons + the ROI showcase card, so section frames
+              stay calm. */}
           <div
             aria-hidden
-            className="glow-border-ring pointer-events-none absolute inset-0 rounded-[32px]"
+            className="pointer-events-none absolute inset-0 rounded-[32px] border border-[#C4B8F3]/60"
           />
           {/* Top sheen — a thin glint of light along the upper edge */}
           <div
@@ -161,15 +157,11 @@ function TestimonialCard({ t, isActive }: { t: Testimonial; isActive?: boolean }
 
       <div className="relative z-10">
         <Stars count={t.stars} />
-        <p className="text-xs font-medium text-neutral-500 mt-6 mb-1">
-          {t.metricLabel}
-        </p>
-        <p className="text-4xl font-bold text-neutral-900 tracking-tight mb-4">
+        <p className="text-xs font-medium text-neutral-500 mt-4 sm:mt-6 mb-1">{t.metricLabel}</p>
+        <p className="text-3xl sm:text-4xl font-bold text-neutral-900 tracking-tight mb-3 sm:mb-4">
           {t.metricValue}
         </p>
-        <p className="text-sm text-neutral-600 leading-relaxed mb-8">
-          {t.quote}
-        </p>
+        <p className="text-sm text-neutral-600 leading-relaxed mb-5 sm:mb-8">{t.quote}</p>
       </div>
       <div className="relative z-10 flex items-center gap-3">
         <img
@@ -280,7 +272,6 @@ function CurvedCarousel({
     }
   }, []);
 
-
   // Autoplay
   useEffect(() => {
     startAutoPlay();
@@ -314,7 +305,10 @@ function CurvedCarousel({
   }, [go, isRTL]);
 
   const spacing = cardW * 0.78;
-  const cardH = Math.round(cardW * 1.35);
+  // Height ratio grows as the card narrows: a flat 1.35 ratio left mobile
+  // cards (260×351) too short for the longest quotes, and the article's
+  // overflow-hidden clipped the avatar row at the bottom.
+  const cardH = Math.round(cardW * (cardW <= 260 ? 1.6 : cardW <= 300 ? 1.45 : 1.35));
 
   const calculateNearestIndex = useCallback(() => {
     const s = dragState.current;
@@ -453,10 +447,15 @@ function CurvedCarousel({
           const translateX = dirSign * fractional * spacing;
           const translateZ = -abs * 180;
           const rotateY = dirSign * fractional * -18;
-          const scaleVal =
-            abs < 1 ? 1 - abs * 0.08 : abs < 2 ? 0.92 - (abs - 1) * 0.12 : 0.8;
+          const scaleVal = abs < 1 ? 1 - abs * 0.08 : abs < 2 ? 0.92 - (abs - 1) * 0.12 : 0.8;
           const opacityVal =
-            abs > 3.2 ? 0 : abs < 1 ? 1 - abs * 0.25 : abs < 2 ? 0.75 - (abs - 1) * 0.35 : Math.max(0, 0.4 - (abs - 2) * 0.2);
+            abs > 3.2
+              ? 0
+              : abs < 1
+                ? 1 - abs * 0.25
+                : abs < 2
+                  ? 0.75 - (abs - 1) * 0.35
+                  : Math.max(0, 0.4 - (abs - 2) * 0.2);
           // On narrow screens the peeking neighbours crowd the small viewport —
           // fade them harder so the centre card clearly owns the stage.
           const sideDim = cardW <= 300 && !isCenter ? 0.5 : 1;
@@ -483,7 +482,10 @@ function CurvedCarousel({
                 zIndex: z,
                 pointerEvents: abs > 3 ? "none" : "auto",
                 cursor: isCenter ? "grab" : "pointer",
-                filter: isCenter && !isDragging ? "none" : `blur(${blurPx}px) grayscale(${isCenter ? 0 : 1})`,
+                filter:
+                  isCenter && !isDragging
+                    ? "none"
+                    : `blur(${blurPx}px) grayscale(${isCenter ? 0 : 1})`,
               }}
               aria-hidden={!isCenter}
             >
@@ -492,7 +494,6 @@ function CurvedCarousel({
           );
         })}
       </div>
-
 
       {/* Controls */}
       <div className="mt-10 flex items-center justify-center gap-5">
@@ -545,11 +546,23 @@ export function TestimonialsSection() {
       // band (z-40) so the focal testimonial cards stay crisp; still below the
       // header (z-50). The ambient bottom-blur keeps working on other sections.
       className="relative z-[45] w-full py-24 md:py-32 overflow-hidden"
-      style={{
-        background:
-          "radial-gradient(ellipse at top, rgba(110, 86, 207, 0.14) 0%, rgba(135, 212, 196, 0.12) 42%, #F8F9FB 78%)",
-      }}
+      style={{ backgroundColor: "#F8F9FB" }}
     >
+      {/* Violet/mint tint — separate edge-masked layer over the plain base, so
+          the tint breathes in from the edges instead of starting on a hard line
+          against the clean #F8F9FB of the neighbouring sections. */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0"
+        style={{
+          background:
+            "radial-gradient(ellipse at top, rgba(110, 86, 207, 0.14) 0%, rgba(135, 212, 196, 0.12) 42%, rgba(248, 249, 251, 0) 78%)",
+          WebkitMaskImage:
+            "linear-gradient(to bottom, transparent 0%, black 14%, black 86%, transparent 100%)",
+          maskImage:
+            "linear-gradient(to bottom, transparent 0%, black 14%, black 86%, transparent 100%)",
+        }}
+      />
       {/* Flex centering + gap (not margins) — SplitText hard-resets its own
           margin, which silently kills mx-auto / mt-* on the children. */}
       <div className="max-w-6xl mx-auto px-6 text-center mb-14 md:mb-20 flex flex-col items-center gap-5">
@@ -558,11 +571,8 @@ export function TestimonialsSection() {
           reveal
           className="text-4xl sm:text-5xl font-bold tracking-tight text-neutral-900"
         >
-          What{" "}
-          <span className="italic font-serif font-normal text-violet-700">
-            teams
-          </span>{" "}
-          say about FocusFlow
+          What <span className="italic font-serif font-normal text-violet-700">teams</span> say
+          about FocusFlow
         </SplitText>
         <SplitText
           as="p"
@@ -570,8 +580,8 @@ export function TestimonialsSection() {
           revealDelay={0.12}
           className="text-base md:text-lg text-neutral-600 max-w-2xl"
         >
-          See how real engineering teams use FocusFlow to stay consistent,
-          protect their time, and ship faster.
+          See how real engineering teams use FocusFlow to stay consistent, protect their time, and
+          ship faster.
         </SplitText>
       </div>
 

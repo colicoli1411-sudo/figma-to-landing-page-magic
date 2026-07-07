@@ -1,6 +1,8 @@
 import React from "react";
 import { ArrowRight } from "lucide-react";
 import { SplitText } from "./SplitText";
+import { cn } from "@/lib/utils";
+import { CTA_PRIMARY, GlareHover } from "./cta";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -93,7 +95,7 @@ export function ContactSection() {
           className="pointer-events-none absolute inset-0"
           style={{
             background:
-              "radial-gradient(circle 720px at 22% 30%, rgba(110, 58, 230, 0.85) 0%, rgba(91, 33, 182, 0.45) 28%, rgba(42, 11, 69, 0.35) 50%, rgba(7, 7, 12, 0) 72%)",
+              "radial-gradient(circle 720px at 22% 30%, rgba(110, 86, 207, 0.85) 0%, rgba(76, 61, 158, 0.45) 28%, rgba(36, 28, 70, 0.35) 50%, rgba(7, 7, 12, 0) 72%)",
           }}
         />
 
@@ -224,17 +226,12 @@ export function ContactSection() {
               </p>
               <button
                 type="submit"
-                className="group relative inline-flex shrink-0 items-center justify-center gap-3 whitespace-nowrap rounded-[12px] border border-white/25 bg-white/10 px-6 py-3.5 text-[15px] font-semibold text-white backdrop-blur-md transition hover:border-transparent active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-400/60 focus-visible:ring-offset-2 focus-visible:ring-offset-[#07070c] sm:justify-start"
+                className={cn(CTA_PRIMARY, "shrink-0 gap-3 whitespace-nowrap px-6 py-3.5 text-[15px] focus-visible:ring-offset-[#07070c] sm:justify-start")}
                 style={{ boxShadow: "0 0 24px rgba(170, 153, 236, 0.35)" }}
               >
-                {/* Rotating conic-gradient ring — same recipe as the ROI card's
-                    glow-border-ring, but only shown on hover instead of always on. */}
-                <span
-                  aria-hidden
-                  className="glow-border-ring pointer-events-none absolute inset-0 rounded-[12px] opacity-0 transition-opacity duration-300 group-hover:opacity-100"
-                />
-                Talk to sales
-                <ArrowRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-0.5" />
+                <GlareHover />
+                <span className="relative">Talk to sales</span>
+                <ArrowRight className="relative h-4 w-4 transition-transform duration-300 group-hover:translate-x-0.5" />
               </button>
             </div>
           </form>

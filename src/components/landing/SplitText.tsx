@@ -54,8 +54,7 @@ type SplitTextProps = {
 };
 
 const prefersReducedMotion = () =>
-  typeof window !== "undefined" &&
-  window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
 const unitStyle = { display: "inline-block", willChange: "opacity, transform" } as const;
 
@@ -71,7 +70,7 @@ function extractText(node: ReactNode): string {
 /**
  * React Bits–style SplitText: splits text into per-character (or per-word)
  * spans and animates them in with a GSAP stagger when the element scrolls into
- * view — fires early (default `top 80%`) so it never lags behind the scroll.
+ * view — fires early (default `top 92%`) so it never lags behind the scroll.
  * Typography is inherited from `className`. Accepts a plain `text` string or
  * rich `children` (nested elements preserved, their text still split).
  */
@@ -87,7 +86,7 @@ export function SplitText({
   splitType = "chars",
   from = { opacity: 0, y: 40 },
   to = { opacity: 1, y: 0 },
-  threshold = 0.2,
+  threshold = 0.08,
   replay = false,
   reveal = false,
   revealDelay = 0,
@@ -127,17 +126,18 @@ export function SplitText({
           ease: "power3.out",
           scrollTrigger: {
             trigger: el,
-            start: "top 85%",
-            // `reset` on leaveBack (not `none`): if a reveal ever fires against a
-            // stale, too-short layout — before fonts/images/the Features pin push
-            // it down — the follow-up ScrollTrigger.refresh() re-measures it below
-            // the viewport and resets it to its hidden state, so it animates
-            // properly when you actually scroll to it. Also gives a clean replay
-            // when scrolling back up past a section.
+            // Fire early (92%) so fast flicks don't outrun the reveal.
+            start: "top 92%",
+            // Play once and never reset: after the first reveal the content
+            // stays visible forever. Previously `toggleActions: ...reset`
+            // re-hid content on scroll-back, so fast mobile scrolling (both
+            // directions) caught whole sections in their hidden `from` state —
+            // blank/white screens. If a refresh race ever fires this early,
+            // the worst case is content that's simply visible.
             // NOTE: no invalidateOnRefresh — for a `.from()` tween it would
             // re-capture the element's *current* (hidden) value as the animation
             // target on refresh, animating 0→0 and leaving content stuck hidden.
-            toggleActions: "play none none reset",
+            once: true,
           },
           onComplete,
         });
@@ -152,12 +152,11 @@ export function SplitText({
 
     const ctx = gsap.context(() => {
       // Hold the units hidden up-front and drive a paused tween through explicit
-      // ScrollTrigger callbacks. This is deterministic where toggleActions are
-      // not: if the trigger ever fires against a stale, too-short layout (before
-      // fonts/images/the Features pin push this element down), the follow-up
-      // ScrollTrigger.refresh() re-measures it below the viewport and onLeaveBack
-      // pauses it back to frame 0 (hidden) — so it animates properly when you
-      // actually scroll to it, instead of sitting committed-visible.
+      // ScrollTrigger callbacks. Once the tween has played, the units stay in
+      // their final visible state forever — there is deliberately NO reset on
+      // leave/leaveBack: resetting to frame 0 (hidden) meant fast mobile
+      // scrolling in either direction could catch sections fully transparent
+      // (blank/white screens).
       gsap.set(units, { ...from });
       const tween = gsap.fromTo(
         units,
@@ -169,12 +168,8 @@ export function SplitText({
         start: `top ${startPct}%`,
         invalidateOnRefresh: true,
         onEnter: () => tween.play(),
-        // replay: restart on every downward re-entry; default: just ensure it has played.
+        // Ensure it has played on upward re-entry too (e.g. page loaded mid-scroll).
         onEnterBack: () => (replay ? tween.restart() : tween.play()),
-        // Reset to the hidden frame when the element leaves below the viewport,
-        // both on real upward scroll and on refresh-driven repositioning.
-        onLeaveBack: () => tween.pause(0),
-        ...(replay ? { onLeave: () => tween.pause(0) } : {}),
       });
     }, el);
 
@@ -238,14 +233,14 @@ export function SplitText({
       {reveal
         ? (children ?? text)
         : children != null
-        ? Children.toArray(children).map((c) => splitNode(c))
-        : words.map((word, wi) => (
-            <Fragment key={wi}>
-              {renderWord(word, `word-${wi}`)}
-              {/* Breakable space between words — at container level so lines wrap. */}
-              {wi < words.length - 1 ? " " : null}
-            </Fragment>
-          ))}
+          ? Children.toArray(children).map((c) => splitNode(c))
+          : words.map((word, wi) => (
+              <Fragment key={wi}>
+                {renderWord(word, `word-${wi}`)}
+                {/* Breakable space between words — at container level so lines wrap. */}
+                {wi < words.length - 1 ? " " : null}
+              </Fragment>
+            ))}
     </TagAny>
   );
 }

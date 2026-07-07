@@ -238,55 +238,36 @@
   }
 }
 
-/* Same clockwise conic sweep as .glow-border, but rendered as a ring overlay so
-   it works on translucent cards (where the content can't simply mask the
-   gradient's centre). Reuses the shared --glow-angle spin. */
-.glow-border-ring {
-  padding: 2px;
-  background: conic-gradient(
-    from var(--glow-angle),
-    rgba(135, 212, 196, 0.85) 0deg,
-    rgba(110, 86, 207, 0.7) 90deg,
-    rgba(196, 184, 243, 0.35) 180deg,
-    rgba(135, 212, 196, 0.15) 270deg,
-    rgba(135, 212, 196, 0.85) 360deg
+/* React Bits "Glare Hover" — a diagonal white light streak that sweeps across a
+   primary button on hover. Parked just off the top-left corner; on hover it
+   slides to the bottom-right in one pass. Applied via <GlareHover /> (cta.tsx),
+   which sits inside a `group relative overflow-hidden` button. */
+.btn-glare {
+  border-radius: inherit;
+  background: linear-gradient(
+    -45deg,
+    transparent 60%,
+    rgba(255, 255, 255, 0.5) 70%,
+    transparent 100%
   );
-  -webkit-mask:
-    linear-gradient(#000 0 0) content-box,
-    linear-gradient(#000 0 0);
-  -webkit-mask-composite: xor;
-  mask-composite: exclude;
-  animation: glow-border-spin 6s linear infinite;
+  background-size: 250% 250%;
+  background-repeat: no-repeat;
+  background-position: -100% -100%;
+  transition: background-position 0.65s ease;
 }
 
-/* Opaque variant for dark cards. The base ring's transparent sweep stops let a
-   near-black card background show through as a hard black edge under the glow;
-   full-opacity stops keep the rotating multicolour glow while hiding the card
-   behind it. (Defined after .glow-border-ring so it wins when both are set.) */
-.glow-border-ring--solid {
-  background: conic-gradient(
-    from var(--glow-angle),
-    rgb(135, 212, 196) 0deg,
-    rgb(110, 86, 207) 90deg,
-    rgb(196, 184, 243) 180deg,
-    rgb(135, 212, 196) 270deg,
-    rgb(135, 212, 196) 360deg
-  );
-}
-
-/* Pause the sweep while the card is hovered (matches the ROI card). */
-.glow-card:hover .glow-border-ring {
-  animation-play-state: paused;
+.group:hover .btn-glare {
+  background-position: 100% 100%;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .glow-border-ring {
-    animation: none;
+  .btn-glare {
+    transition: none;
   }
 }
 
 /* Animated glow that sweeps horizontally along a 2px line — the 1-D analogue of
-   the rotating card border glow. A cyan→violet highlight travels across the
+   the rotating card border glow. A mint→violet highlight travels across the
    line. Shared by the FAQ top line and the header nav underlines. */
 @keyframes glow-line-sweep {
   from {
@@ -326,7 +307,7 @@
   }
 }
 
-/* Header nav underline — the same cyan→violet sweep layered over the 2px bar,
+/* Header nav underline — the same mint→violet sweep layered over the 2px bar,
    matching the card/FAQ glow family. Shown while the bar is filling (hover) or
    fully filled (active). The sweep rides on the bar span, so it scales with it. */
 .nav-underline-glow::after {
@@ -364,6 +345,31 @@
   .nav-underline-glow--active::after,
   .group:hover .nav-underline-glow--hover::after {
     animation: none;
+  }
+}
+
+/* Mobile menu toggle — three bars morph into an X. Driven by a stylesheet class
+   keyed off the button's data-menu-open attribute (React only toggles that
+   attribute), so the transform lives in CSS and re-renders can't cancel the
+   transition the way an inline transition or JS animation was getting stuck. */
+.burger-bar {
+  transition:
+    transform 0.42s cubic-bezier(0.5, 0.2, 0.1, 1.35),
+    opacity 0.25s ease;
+}
+[data-menu-open="true"] .burger-bar-top {
+  transform: translateY(6px) rotate(45deg);
+}
+[data-menu-open="true"] .burger-bar-mid {
+  opacity: 0;
+  transform: scaleX(0.2);
+}
+[data-menu-open="true"] .burger-bar-bot {
+  transform: translateY(-6px) rotate(-45deg);
+}
+@media (prefers-reduced-motion: reduce) {
+  .burger-bar {
+    transition: none;
   }
 }
 

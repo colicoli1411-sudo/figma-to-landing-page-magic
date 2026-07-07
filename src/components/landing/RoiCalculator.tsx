@@ -1,16 +1,12 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { SplitText } from "./SplitText";
 import * as SliderPrimitive from "@radix-ui/react-slider";
-import {
-  animate,
-  motion,
-  useMotionValue,
-  useReducedMotion,
-  useTransform,
-} from "framer-motion";
+import { animate, motion, useMotionValue, useReducedMotion, useTransform } from "framer-motion";
 import { ArrowRight, Info } from "lucide-react";
 import { IntegrationStrip } from "./Integrations";
 import DotField from "./DotField";
+import { cn } from "@/lib/utils";
+import { CTA_PRIMARY, GlareHover } from "./cta";
 
 /* ── Model constants (disclosed in the footnote so the numbers stay credible) ── */
 const WORK_HOURS_PER_YEAR = 2080; // 52 weeks × 40h
@@ -88,9 +84,7 @@ function InputRow({
     <div>
       <div className="mb-2 flex items-baseline justify-between gap-3">
         <span className="text-[14px] font-medium text-[#4b5563]">{label}</span>
-        <span className="text-[15px] font-bold tabular-nums text-[#1d1d23]">
-          {displayValue}
-        </span>
+        <span className="text-[15px] font-bold tabular-nums text-[#1d1d23]">{displayValue}</span>
       </div>
       <BrandSlider
         value={value}
@@ -126,9 +120,7 @@ function AnimatedMoney({ value }: { value: number }) {
  *  clockwise around the card continuously, pausing while hovered. */
 function GlowBorder({ children }: { children: React.ReactNode }) {
   return (
-    <div className="glow-border relative mx-auto max-w-4xl rounded-[26px] p-[2px]">
-      {children}
-    </div>
+    <div className="glow-border relative mx-auto max-w-4xl rounded-[26px] p-[2px]">{children}</div>
   );
 }
 
@@ -139,8 +131,7 @@ export function RoiCalculator() {
   const { moneySavedPerYear, hoursReclaimedPerWeek } = useMemo(() => {
     const p = CAPACITY_LOST_PCT / 100;
     const annualSalary = monthlySalary * 12;
-    const reclaimedHoursPerYear =
-      teamSize * WORK_HOURS_PER_YEAR * p * RECOVERY_RATE;
+    const reclaimedHoursPerYear = teamSize * WORK_HOURS_PER_YEAR * p * RECOVERY_RATE;
     return {
       moneySavedPerYear: teamSize * annualSalary * p * RECOVERY_RATE,
       hoursReclaimedPerWeek: Math.round(reclaimedHoursPerYear / 52),
@@ -154,8 +145,18 @@ export function RoiCalculator() {
       style={{ backgroundColor: "#F8F9FB" }}
     >
       {/* Interactive dot-field background — same treatment as the hero, sitting
-          behind the aurora mesh and all content. */}
-      <div aria-hidden className="pointer-events-none absolute inset-0 z-0">
+          behind the aurora mesh and all content. Edge-masked so the dots
+          dissolve at the section boundaries instead of starting on a line. */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0 z-0"
+        style={{
+          WebkitMaskImage:
+            "linear-gradient(to bottom, transparent 0%, black 12%, black 88%, transparent 100%)",
+          maskImage:
+            "linear-gradient(to bottom, transparent 0%, black 12%, black 88%, transparent 100%)",
+        }}
+      >
         <DotField
           dotRadius={1.5}
           dotSpacing={14}
@@ -170,8 +171,17 @@ export function RoiCalculator() {
         />
       </div>
 
-      {/* Ambient aurora mesh — echoes Features, kept subtle. */}
-      <div className="pointer-events-none absolute inset-0">
+      {/* Ambient aurora mesh — echoes Features, kept subtle. Edge-masked so the
+          blurred blobs dissolve before the overflow-hidden boundary. */}
+      <div
+        className="pointer-events-none absolute inset-0"
+        style={{
+          WebkitMaskImage:
+            "linear-gradient(to bottom, transparent 0%, black 12%, black 88%, transparent 100%)",
+          maskImage:
+            "linear-gradient(to bottom, transparent 0%, black 12%, black 88%, transparent 100%)",
+        }}
+      >
         <div
           className="absolute -left-[18%] -top-[12%] h-[760px] w-[760px] rounded-full opacity-60"
           style={{
@@ -198,11 +208,8 @@ export function RoiCalculator() {
             reveal
             className="text-balance text-4xl font-bold tracking-tight text-neutral-900 md:text-5xl"
           >
-            Put a{" "}
-            <span className="italic font-serif font-normal text-violet-700">
-              number
-            </span>{" "}
-            on your team's focus.
+            Put a <span className="italic font-serif font-normal text-violet-700">number</span> on
+            your team's focus.
           </SplitText>
           <SplitText
             as="p"
@@ -210,129 +217,129 @@ export function RoiCalculator() {
             revealDelay={0.12}
             className="max-w-[560px] text-[15px] font-light leading-relaxed text-[#6b7280] sm:text-[16px]"
           >
-            Context switching quietly drains your team's capacity. Drag the
-            sliders to see what FocusFlow reclaims — in dollars and in hours.
+            Context switching quietly drains your team's capacity. Drag the sliders to see what
+            FocusFlow reclaims — in dollars and in hours.
           </SplitText>
         </div>
 
         {/* Calculator card */}
         <SplitText as="div" reveal revealDelay={0.24}>
-        <GlowBorder>
-        <div
-          className="grid w-full grid-cols-1 overflow-hidden rounded-[24px] bg-white lg:grid-cols-2"
-          style={{ boxShadow: CARD_SHADOW }}
-        >
-          {/* Inputs */}
-          <div className="flex flex-col gap-7 p-7 md:p-9">
-            <InputRow
-              label="Team size"
-              displayValue={`${teamSize}`}
-              value={teamSize}
-              min={1}
-              max={200}
-              onChange={setTeamSize}
-            />
-            <InputRow
-              label="Avg. monthly salary"
-              displayValue={`${currency.format(monthlySalary)}/mo`}
-              value={monthlySalary}
-              min={3000}
-              max={20000}
-              step={500}
-              onChange={setMonthlySalary}
-            />
+          <GlowBorder>
+            <div
+              className="grid w-full grid-cols-1 overflow-hidden rounded-[24px] bg-white lg:grid-cols-2"
+              style={{ boxShadow: CARD_SHADOW }}
+            >
+              {/* Inputs */}
+              <div className="flex flex-col gap-7 p-7 md:p-9">
+                <InputRow
+                  label="Team size"
+                  displayValue={`${teamSize}`}
+                  value={teamSize}
+                  min={1}
+                  max={200}
+                  onChange={setTeamSize}
+                />
+                <InputRow
+                  label="Avg. monthly salary"
+                  displayValue={`${currency.format(monthlySalary)}/mo`}
+                  value={monthlySalary}
+                  min={3000}
+                  max={20000}
+                  step={500}
+                  onChange={setMonthlySalary}
+                />
 
-            {/* Fixed, research-backed stat — kept minimal (a subtle divider +
+                {/* Fixed, research-backed stat — kept minimal (a subtle divider +
                 small info glyph) so it reads as a given, not a control, while
                 staying visually quiet next to the adjustable sliders. */}
-            <div className="border-t border-black/5 pt-5">
-              <div className="flex items-baseline justify-between gap-3">
-                <span className="flex items-center gap-1.5 text-[14px] font-medium text-[#4b5563]">
-                  Capacity lost to context-switching
-                  <Info className="h-3.5 w-3.5 text-[#4b5563]/40" strokeWidth={2} />
-                </span>
-                <span className="text-[15px] font-bold tabular-nums text-[#1d1d23]">
-                  {CAPACITY_LOST_PCT}%
-                </span>
+                <div className="border-t border-black/5 pt-5">
+                  <div className="flex items-baseline justify-between gap-3">
+                    <span className="flex items-center gap-1.5 text-[14px] font-medium text-[#4b5563]">
+                      Capacity lost to context-switching
+                      <Info className="h-3.5 w-3.5 text-[#4b5563]/40" strokeWidth={2} />
+                    </span>
+                    <span className="text-[15px] font-bold tabular-nums text-[#1d1d23]">
+                      {CAPACITY_LOST_PCT}%
+                    </span>
+                  </div>
+                  <p className="mt-1 text-[11px] leading-relaxed text-[#6b7280]">
+                    Industry estimate · interruption-recovery research: Mark et al., UC Irvine.
+                  </p>
+                </div>
               </div>
-              <p className="mt-1 text-[11px] leading-relaxed text-[#6b7280]">
-                Industry estimate · interruption-recovery research: Mark et
-                al., UC Irvine.
-              </p>
-            </div>
-          </div>
 
-          {/* Results — Apple-style premium panel: deep gradient, generous
+              {/* Results — Apple-style premium panel: deep gradient, generous
               whitespace, hairline dividers and a soft ambient bloom. */}
-          <div className="relative flex flex-col justify-center gap-8 overflow-hidden p-8 md:p-10">
-            {/* Deep base gradient (violet → indigo → cool blue) */}
-            <div
-              className="absolute inset-0"
-              style={{
-                background:
-                  "linear-gradient(155deg, #1b1533 0%, #241b46 46%, #142438 100%)",
-              }}
-            />
-            {/* Ambient blooms echoing the site's violet + cyan palette */}
-            <div
-              className="pointer-events-none absolute -right-20 -top-20 h-64 w-64 rounded-full"
-              style={{
-                background:
-                  "radial-gradient(circle, rgba(170,153,236,0.40) 0%, transparent 70%)",
-                filter: "blur(24px)",
-              }}
-            />
-            <div
-              className="pointer-events-none absolute -bottom-24 -left-12 h-60 w-60 rounded-full"
-              style={{
-                background:
-                  "radial-gradient(circle, rgba(135,212,196,0.22) 0%, transparent 70%)",
-                filter: "blur(28px)",
-              }}
-            />
-            {/* Fine top highlight — the classic Apple glass edge */}
-            <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/25 to-transparent" />
+              <div className="relative flex flex-col justify-center gap-8 overflow-hidden p-8 md:p-10">
+                {/* Deep base gradient (violet → indigo → cool blue) */}
+                <div
+                  className="absolute inset-0"
+                  style={{
+                    background: "linear-gradient(155deg, #1b1533 0%, #241b46 46%, #142438 100%)",
+                  }}
+                />
+                {/* Ambient blooms echoing the site's violet + mint palette */}
+                <div
+                  className="pointer-events-none absolute -right-20 -top-20 h-64 w-64 rounded-full"
+                  style={{
+                    background:
+                      "radial-gradient(circle, rgba(170,153,236,0.40) 0%, transparent 70%)",
+                    filter: "blur(24px)",
+                  }}
+                />
+                <div
+                  className="pointer-events-none absolute -bottom-24 -left-12 h-60 w-60 rounded-full"
+                  style={{
+                    background:
+                      "radial-gradient(circle, rgba(135,212,196,0.22) 0%, transparent 70%)",
+                    filter: "blur(28px)",
+                  }}
+                />
+                {/* Fine top highlight — the classic Apple glass edge */}
+                <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/25 to-transparent" />
 
-            <div className="relative">
-              <p className="text-[11px] font-medium uppercase tracking-[0.16em] text-white/65">
-                Reclaimed per year
-              </p>
-              <div className="mt-2.5 text-[44px] font-bold leading-[0.95] tracking-tight text-white tabular-nums sm:text-[60px] md:text-[76px]">
-                <AnimatedMoney value={moneySavedPerYear} />
+                <div className="relative">
+                  <p className="text-[11px] font-medium uppercase tracking-[0.16em] text-white/65">
+                    Reclaimed per year
+                  </p>
+                  <div className="mt-2.5 text-[44px] font-bold leading-[0.95] tracking-tight text-white tabular-nums sm:text-[60px] md:text-[76px]">
+                    <AnimatedMoney value={moneySavedPerYear} />
+                  </div>
+                </div>
+
+                <div className="relative h-px w-full bg-white/[0.08]" />
+
+                <div className="relative">
+                  <p className="text-[11px] font-medium uppercase tracking-[0.16em] text-white/65">
+                    Focus hours reclaimed / week
+                  </p>
+                  <p className="mt-2 text-[20px] font-medium leading-none tracking-tight text-white/70 tabular-nums md:text-[22px]">
+                    {hoursReclaimedPerWeek.toLocaleString("en-US")}
+                    <span className="ml-1.5 text-[13px] font-normal text-white/65">hrs</span>
+                  </p>
+                </div>
+
+                <a
+                  href="/signup?plan=pro"
+                  className={cn(
+                    CTA_PRIMARY,
+                    "mt-1 px-6 py-3.5 text-[15px] focus-visible:ring-offset-[#1b1533]",
+                  )}
+                >
+                  <GlareHover />
+                  <span className="relative">Start free trial</span>
+                  <ArrowRight className="relative h-4 w-4 transition-transform duration-300 group-hover:translate-x-0.5" />
+                </a>
+
+                <p className="relative text-[11px] leading-relaxed text-white/60">
+                  Estimate assumes {WORK_HOURS_PER_YEAR.toLocaleString("en-US")} working hours/year
+                  and {CAPACITY_LOST_PCT}% capacity lost to context switching. The ~
+                  {Math.round(RECOVERY_RATE * 100)}% recovery rate is FocusFlow's modeled
+                  assumption.
+                </p>
               </div>
             </div>
-
-            <div className="relative h-px w-full bg-white/[0.08]" />
-
-            <div className="relative">
-              <p className="text-[11px] font-medium uppercase tracking-[0.16em] text-white/65">
-                Focus hours reclaimed / week
-              </p>
-              <p className="mt-2 text-[20px] font-medium leading-none tracking-tight text-white/70 tabular-nums md:text-[22px]">
-                {hoursReclaimedPerWeek.toLocaleString("en-US")}
-                <span className="ml-1.5 text-[13px] font-normal text-white/65">
-                  hrs
-                </span>
-              </p>
-            </div>
-
-            <a
-              href="/signup?plan=pro"
-              className="group relative mt-1 inline-flex items-center justify-center gap-2 rounded-[12px] border border-white bg-transparent px-6 py-3.5 text-[15px] font-semibold text-white transition-all duration-300 hover:scale-[1.02] hover:border-[#6E56CF] hover:bg-[#6E56CF] active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-400/60 focus-visible:ring-offset-2 focus-visible:ring-offset-[#1b1533]"
-            >
-              Start free trial
-              <ArrowRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-0.5" />
-            </a>
-
-            <p className="relative text-[11px] leading-relaxed text-white/60">
-              Estimate assumes {WORK_HOURS_PER_YEAR.toLocaleString("en-US")}{" "}
-              working hours/year and {CAPACITY_LOST_PCT}% capacity lost to
-              context switching. The ~{Math.round(RECOVERY_RATE * 100)}%
-              recovery rate is FocusFlow's modeled assumption.
-            </p>
-          </div>
-        </div>
-        </GlowBorder>
+          </GlowBorder>
         </SplitText>
 
         {/* Supporting "works with your tools" strip — separated from the card

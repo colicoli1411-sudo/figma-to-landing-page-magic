@@ -1,6 +1,9 @@
 import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { Logo } from "./Logo";
+import { cn } from "@/lib/utils";
+import { CTA_PRIMARY, GlareHover } from "./cta";
 
 const NAV_ITEMS: { label: string; href: string; id: string }[] = [
   { label: "Features", href: "#features", id: "features" },
@@ -27,6 +30,10 @@ export function Header() {
   const [activeId, setActiveId] = useState<string>("");
   const lastY = useRef(0);
   const reduce = useReducedMotion();
+  // Portal target is only available on the client — gate the overlay on mount
+  // so SSR renders nothing and there's no hydration mismatch.
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
 
   // Stagger entrance for each menu item; reduced-motion → fade only, no slide.
   const itemVariants = reduce
@@ -165,12 +172,13 @@ export function Header() {
         {/* CTA (desktop/tablet) — self-serve signup, real navigation. */}
         <a
           href="/signup"
-          className="hidden shrink-0 items-center gap-2 rounded-[12px] bg-[#6E56CF] px-3.5 py-2 text-[14px] font-semibold text-white drop-shadow-[0_0_10px_rgba(170,153,236,0.3)] transition-[transform,filter] duration-200 hover:scale-[1.02] hover:drop-shadow-[0_0_16px_rgba(170,153,236,0.45)] active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-400/60 focus-visible:ring-offset-2 sm:inline-flex sm:px-4 sm:text-[14px]"
+          className={cn(CTA_PRIMARY, "hidden shrink-0 px-3.5 py-2 text-[14px] sm:inline-flex sm:px-4")}
           data-edit-id="header-cta"
           data-edit-label="Header CTA"
         >
-          <span className="hidden sm:inline">Start free trial</span>
-          <span className="sm:hidden">Start</span>
+          <GlareHover />
+          <span className="relative hidden sm:inline">Start free trial</span>
+          <span className="relative sm:hidden">Start</span>
         </a>
 
         {/* Mobile menu toggle — three bars morph into an X */}
@@ -178,42 +186,36 @@ export function Header() {
           type="button"
           aria-label="Toggle menu"
           aria-expanded={open}
+          data-menu-open={open ? "true" : "false"}
           onClick={() => setOpen((v) => !v)}
           className="relative inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-[var(--color-stroke-brand)] bg-white/60 text-[#1d1d23] lg:hidden"
         >
           <span className="relative block h-3.5 w-[18px]" aria-hidden>
-            <motion.span
-              className="absolute left-0 block h-0.5 w-full rounded-full bg-[#6E56CF]"
-              style={{ top: 0 }}
-              animate={open ? { y: 6, rotate: 45 } : { y: 0, rotate: 0 }}
-              transition={{ duration: 0.42, ease: [0.5, 0.2, 0.1, 1.35] }}
-            />
-            <motion.span
-              className="absolute left-0 block h-0.5 w-full rounded-full bg-[#6E56CF]"
+            <span className="burger-bar burger-bar-top absolute left-0 top-0 block h-0.5 w-full rounded-full bg-[#6E56CF]" />
+            <span
+              className="burger-bar burger-bar-mid absolute left-0 block h-0.5 w-full rounded-full bg-[#6E56CF]"
               style={{ top: 6 }}
-              animate={open ? { opacity: 0, scaleX: 0.2 } : { opacity: 1, scaleX: 1 }}
-              transition={{ duration: 0.3, ease: "easeOut" }}
             />
-            <motion.span
-              className="absolute left-0 block h-0.5 w-full rounded-full bg-[#6E56CF]"
+            <span
+              className="burger-bar burger-bar-bot absolute left-0 block h-0.5 w-full rounded-full bg-[#6E56CF]"
               style={{ top: 12 }}
-              animate={open ? { y: -6, rotate: -45 } : { y: 0, rotate: 0 }}
-              transition={{ duration: 0.42, ease: [0.5, 0.2, 0.1, 1.35] }}
             />
           </span>
         </button>
       </div>
 
-      {/* Mobile fullscreen menu overlay. Sits at z-40 (below the z-50 header
-          bar) so the morphing X stays visible and tappable to close. Any click
-          on the frosted backdrop also closes it. */}
-      <AnimatePresence>
-        {open && (
+      {/* Mobile fullscreen menu overlay — portaled to <body> so it escapes the
+          header's transform (a transformed ancestor traps `position:fixed` and
+          shrinks the overlay to the header's box). Sits at z-40, below the z-50
+          header bar, so the morphing X stays visible and tappable to close;
+          clicking the frosted backdrop or pressing Escape also closes it. */}
+      {mounted &&
+        open &&
+        createPortal(
           <motion.div
             className="fixed inset-0 z-40 bg-white/80 backdrop-blur-xl lg:hidden"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
             transition={{ duration: 0.3, ease: "easeOut" }}
             onClick={() => setOpen(false)}
           >
@@ -251,14 +253,15 @@ export function Header() {
                 href="/signup"
                 variants={itemVariants}
                 onClick={() => setOpen(false)}
-                className="mt-4 inline-flex items-center justify-center rounded-[14px] bg-[#6E56CF] px-8 py-3 text-lg font-semibold text-white drop-shadow-[0_0_16px_rgba(170,153,236,0.4)] transition-transform duration-200 active:scale-[0.98]"
+                className={cn(CTA_PRIMARY, "mt-4 px-8 py-3 text-lg")}
               >
-                Start free trial
+                <GlareHover className="rounded-[12px]" />
+                <span className="relative">Start free trial</span>
               </motion.a>
             </motion.nav>
-          </motion.div>
+          </motion.div>,
+          document.body,
         )}
-      </AnimatePresence>
     </header>
   );
 }

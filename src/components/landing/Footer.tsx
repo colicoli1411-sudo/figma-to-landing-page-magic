@@ -4,6 +4,8 @@ import { SiX, SiGithub, SiYoutube } from "react-icons/si";
 import { FaLinkedinIn } from "react-icons/fa6";
 import TextPressure from "./TextPressure";
 import { Logo } from "./Logo";
+import { cn } from "@/lib/utils";
+import { CTA_SECONDARY_DARK } from "./cta";
 
 // Kept in sync with the header nav (Header.tsx NAV_ITEMS).
 const productLinks = [
@@ -33,7 +35,7 @@ export function Footer() {
       className="relative overflow-hidden text-white"
       style={{
         background:
-          "radial-gradient(120% 90% at 100% 100%, #E9D5FF 0%, #C084FC 18%, #9333EA 38%, #6B21A8 58%, #2A0B45 78%, #0A0A0F 100%)",
+          "radial-gradient(120% 90% at 100% 100%, #E4DEFC 0%, #AA99EC 18%, #6E56CF 38%, #4C3D9E 58%, #241C46 78%, #0A0A0F 100%)",
       }}
     >
       {/* Subtle grain overlay */}
@@ -74,18 +76,17 @@ export function Footer() {
               italic={false}
               textColor="#ffffff"
               minFontSize={64}
+              scrollDrive
             />
           </div>
           <div className="mt-10 flex flex-col items-start justify-between gap-6 sm:flex-row sm:items-center">
-            <p className="max-w-md text-base text-white/70">
-              Quiet the noise. Ship the work.
-            </p>
+            <p className="max-w-md text-base text-white/70">Quiet the noise. Ship the work.</p>
             <a
               href="/signup"
-              className="group inline-flex items-center gap-3 rounded-[12px] border border-white/25 bg-white/10 px-6 py-3.5 text-[15px] font-semibold text-white transition duration-300 hover:scale-[1.02] hover:border-[#6E56CF] hover:bg-[#6E56CF] active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-400/60 focus-visible:ring-offset-2 focus-visible:ring-offset-[#0A0A0F]"
-              style={{
-                boxShadow: "0 0 24px rgba(170, 153, 236, 0.35)",
-              }}
+              className={cn(
+                CTA_SECONDARY_DARK,
+                "gap-3 px-6 py-3.5 text-[15px] focus-visible:ring-offset-[#0A0A0F]",
+              )}
             >
               Start free trial
               <ArrowRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-0.5" />
@@ -101,8 +102,8 @@ export function Footer() {
               <Logo size={30} focusColor="#ffffff" flowColor="#D7CFF9" />
             </Link>
             <p className="mt-5 text-[14px] leading-relaxed text-white/70">
-              Multiplayer focus for modern tech teams. Sync deep work, mute the
-              noise, protect the calendar.
+              Multiplayer focus for modern tech teams. Sync deep work, mute the noise, protect the
+              calendar.
             </p>
           </div>
 
@@ -126,9 +127,15 @@ export function Footer() {
         <div className="flex flex-col-reverse items-start justify-between gap-6 border-t border-white/10 pt-8 md:flex-row md:items-center">
           <div className="flex flex-col gap-2 text-xs text-white/50 sm:flex-row sm:items-center sm:gap-6">
             <span>© {new Date().getFullYear()} FocusFlow Labs, Inc.</span>
-            <a href="#" className="hover:text-white/80">Privacy</a>
-            <a href="#" className="hover:text-white/80">Terms</a>
-            <a href="#" className="hover:text-white/80">Security</a>
+            <a href="#" className="hover:text-white/80">
+              Privacy
+            </a>
+            <a href="#" className="hover:text-white/80">
+              Terms
+            </a>
+            <a href="#" className="hover:text-white/80">
+              Security
+            </a>
           </div>
 
           <div className="flex items-center gap-3">
@@ -145,6 +152,22 @@ export function Footer() {
               <SiYoutube size={16} />
             </SocialLink>
           </div>
+        </div>
+
+        {/* Design & build credit — kept legible (not a faint whisper): the name
+            sits in a light-violet brand tone so it reads with quiet confidence. */}
+        <div className="mt-8 border-t border-white/10 pt-6 text-center text-[13px] text-white/55">
+          Designed &amp; developed by{" "}
+          <a
+            href={`https://wa.me/972543975773?text=${encodeURIComponent(
+              "היי קורל, ראיתי את העבודות שלך ואשמח לדבר!",
+            )}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="font-medium text-[#C4B8F3] underline-offset-4 transition-colors hover:text-white hover:underline"
+          >
+            Coral Tzioni
+          </a>
         </div>
       </div>
     </footer>

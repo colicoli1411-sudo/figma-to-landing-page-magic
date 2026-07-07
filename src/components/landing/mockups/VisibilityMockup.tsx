@@ -57,8 +57,6 @@ const MEMBERS: {
   { initials: "OM", name: "Olivia Martinez", status: "break", avatar: "/images/olivia-martinez.jpg" },
 ];
 
-const NAV = ["Focus", "Chat", "Statistics", "Integrations", "Settings"];
-
 export function VisibilityMockup() {
   // Each member's current status, as an index into STATUS_ORDER. A "wave" sweeps
   // down the list (first → last), advancing one member's status per tick, then
@@ -92,40 +90,19 @@ export function VisibilityMockup() {
   return (
     <div
       className="relative h-full w-full overflow-hidden"
-      style={{ background: "#f2ecfe", containerType: "inline-size" }}
+      style={{ background: "#EDE9FE", containerType: "inline-size" }}
     >
-      {/* ---------- Blurred real dashboard behind ---------- */}
+      {/* ---------- Blurred app background (sidebar collapsed) ---------- */}
+      {/* Just the purple app canvas with the content panel floating on it — the
+          sidebar is closed, so the left stays purple instead of a white rail.
+          On mobile the panel spans full width (there was never a sidebar there);
+          on sm+ it's inset from the left where the sidebar used to sit. */}
       <div
-        className="absolute inset-0 flex"
+        className="absolute inset-0"
         style={{ filter: "blur(3px)" }}
         aria-hidden
       >
-        {/* Sidebar */}
-        <div className="hidden w-[20%] shrink-0 flex-col border-r border-[#e5e7eb] bg-white p-[2cqw] sm:flex">
-          <div className="mx-auto mb-[3.4cqw] mt-[1.4cqw] h-[1.6cqw] w-[62%] rounded-full bg-[rgba(110,86,207,0.3)]" />
-          {NAV.map((label, i) => (
-            <div
-              key={label}
-              className={`mb-[1.4cqw] flex items-center gap-[1.2cqw] rounded-[1cqw] px-[1.4cqw] py-[1.3cqw] ${
-                i === 0 ? "bg-[rgba(110,86,207,0.12)]" : ""
-              }`}
-            >
-              <div
-                className={`h-[1.8cqw] w-[1.8cqw] rounded-[0.4cqw] ${
-                  i === 0 ? "bg-[#6E56CF]" : "bg-neutral-300"
-                }`}
-              />
-              <div
-                className={`h-[1.2cqw] flex-1 rounded-full ${
-                  i === 0 ? "bg-[rgba(110,86,207,0.45)]" : "bg-neutral-200"
-                }`}
-              />
-            </div>
-          ))}
-        </div>
-
-        {/* Main column */}
-        <div className="flex-1 p-[3cqw]">
+        <div className="h-full p-[4cqw]">
           {/* App header bar */}
           <div className="mb-[2.6cqw] flex items-center justify-between rounded-[1.8cqw] border border-[#e5e7eb] bg-white px-[2.4cqw] py-[1.8cqw]">
             <div className="flex flex-col gap-[1cqw]">
@@ -186,7 +163,7 @@ export function VisibilityMockup() {
               <li
                 key={m.name}
                 className="flex items-center gap-[1.5cqw] rounded-[1.6cqw] p-[0.9cqw]"
-                style={isYou ? { background: "#f2ecfe" } : undefined}
+                style={isYou ? { background: "#EDE9FE" } : undefined}
               >
                 <img
                   src={m.avatar}

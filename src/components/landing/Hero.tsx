@@ -7,6 +7,9 @@ import { motion } from "framer-motion";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { isIntroActive, whenIntroReveals, INTRO_TOTAL_MS } from "@/lib/page-load-intro";
+import { computeMockupTargetScale } from "@/lib/mockup-scale";
+import { cn } from "@/lib/utils";
+import { CTA_PRIMARY, CTA_SECONDARY_LIGHT, GlareHover } from "./cta";
 import "./TrueFocus.css";
 
 gsap.registerPlugin(ScrollTrigger);
@@ -16,6 +19,9 @@ export function Hero() {
   // whole unit (dashboard + floating cards) up to full viewport width.
   const heroRef = useRef<HTMLElement>(null);
   const mockupScaleRef = useRef<HTMLDivElement>(null);
+  // Wraps ALL hero visuals (dot field, glow, copy, mockup). The pin's scrubbed
+  // timeline recedes this wrapper while the next section's card covers it.
+  const recedeRef = useRef<HTMLDivElement>(null);
   // Mirrors Sarah Chen's status from the mockup's Team Flow so her floating pill
   // starts "Available" and flips to "In Deep Work" in sync with the demo.
   const [sarahStatus, setSarahStatus] = useState<Status>("available");
@@ -56,10 +62,22 @@ export function Hero() {
 
       tl.from(".focus-bracket-left", { x: -40, opacity: 0, duration: 0.9, ease: "power4.out" }, 0)
         .from(".focus-bracket-right", { x: 40, opacity: 0, duration: 0.9, ease: "power4.out" }, 0)
-        .from(".hero-title", { filter: "blur(18px)", opacity: 0, scale: 1.06, duration: 1.2, ease: "power2.out" }, 0.15)
+        .from(
+          ".hero-title",
+          { filter: "blur(18px)", opacity: 0, scale: 1.06, duration: 1.2, ease: "power2.out" },
+          0.15,
+        )
         .from(".hero-eyebrow", { y: 20, opacity: 0, duration: 0.8 }, 0.35)
-        .from([".hero-subtitle", ".hero-cta"], { y: 24, opacity: 0, duration: 0.7, stagger: 0.12 }, 0.6)
-        .from(".hero-preview", { y: 60, opacity: 0, scale: 0.98, duration: 1.1, ease: "power2.out" }, 0.8);
+        .from(
+          [".hero-subtitle", ".hero-cta"],
+          { y: 24, opacity: 0, duration: 0.7, stagger: 0.12 },
+          0.6,
+        )
+        .from(
+          ".hero-preview",
+          { y: 60, opacity: 0, scale: 0.98, duration: 1.1, ease: "power2.out" },
+          0.8,
+        );
 
       if (isIntroActive()) {
         // Start when the loader reveals the page; fall back to a timeout so the
@@ -94,37 +112,19 @@ export function Hero() {
         { scale: 1 },
         {
           // Grow the whole unit (dashboard + floating cards) until it fills the
-          // viewport, sized from the cards' real extent so they're never clipped.
-          scale: () => {
-            const margin = 28; // breathing room kept on each side
-            const center = scaleEl.offsetWidth / 2;
-            // Widest distance from the dashboard centre to any edge, including the
-            // floating cards' own width + overhang on each side.
-            let halfExtent = center;
-            scaleEl
-              .querySelectorAll('[data-edit-id^="float-"]')
-              .forEach((c) => {
-                const el = c as HTMLElement;
-                halfExtent = Math.max(
-                  halfExtent,
-                  center - el.offsetLeft,
-                  el.offsetLeft + el.offsetWidth - center,
-                );
-              });
-            // clientWidth excludes the scrollbar, so the unit stays centred.
-            const vw = document.documentElement.clientWidth;
-            const floatingSafe = (vw / 2 - margin) / halfExtent;
-            // Hard cap: the dashboard itself never grows past ~75% of the
-            // viewport width, so the expand stops at the target size.
-            const maxByDashboard = (vw * 0.75) / scaleEl.offsetWidth;
-            return Math.min(floatingSafe, maxByDashboard);
-          },
+          // viewport — shared with ContextSwitching, whose cover card starts at
+          // exactly the mockup's final width (see lib/mockup-scale.ts).
+          scale: () => computeMockupTargetScale(scaleEl),
           ease: "none",
           scrollTrigger: {
             trigger: hero,
             // Begins immediately as the user starts scrolling from the top.
             start: "top top",
-            end: "+=520",
+            // Normally 520px of scroll — but on very tall viewports the cover
+            // pin (hero bottom hits viewport bottom) can arrive sooner than
+            // that, so cap the range to end exactly at pin start. Keeps the
+            // mockup from still growing while it's supposed to be frozen.
+            end: () => "+=" + Math.min(520, Math.max(1, hero.offsetHeight - window.innerHeight)),
             scrub: true,
             invalidateOnRefresh: true,
           },
@@ -140,6 +140,77 @@ export function Hero() {
     return () => mm.revert();
   }, []);
 
+  // Cover effect: when the hero's bottom reaches the viewport bottom (the user
+  // hits the end of the mockup), the ENTIRE hero — background included — pins
+  // in place with no spacer, so the next section scrolls up OVER it. Early in
+  // the cover (by the time the card reaches mid-screen) the recede wrapper —
+  // glow + copy + mockup — scales down and fades out entirely, leaving only
+  // the dotted backdrop behind the rising card. The pin holds until the whole
+  // context section has scrolled past (endTrigger), so the dots stay frozen
+  // behind the card for the entire ride and the unpin happens only once the
+  // opaque Features section covers the viewport — invisible. Scoped via
+  // gsap.context so a single revert() tears down the pin cleanly on
+  // HMR/remount (same pattern as the Features pin).
+  useEffect(() => {
+    const hero = heroRef.current;
+    const wrap = recedeRef.current;
+    if (!hero || !wrap) return;
+
+    const ctx = gsap.context(() => {
+      const mm = gsap.matchMedia();
+
+      mm.add("(min-width: 1024px) and (prefers-reduced-motion: no-preference)", () => {
+        // Scale around the point that sits at the viewport's centre at pin
+        // time. The hero is taller than the viewport, so keyword origins
+        // (center/bottom) would drift; recomputed on every refresh.
+        const setOrigin = () => {
+          gsap.set(wrap, {
+            transformOrigin: `50% ${hero.offsetHeight - window.innerHeight / 2}px`,
+          });
+        };
+        setOrigin();
+
+        const tl = gsap.timeline({
+          defaults: { ease: "none" },
+          scrollTrigger: {
+            trigger: hero,
+            start: "bottom bottom",
+            // Hold the pin until the context section has fully scrolled past —
+            // the dotted backdrop stays frozen behind the card the whole way,
+            // and the unpin lands hidden behind the opaque Features section.
+            endTrigger: "#context-switching",
+            end: "bottom top",
+            pin: true,
+            // No spacer: the following section keeps its document position and
+            // rides up over the pinned hero — the canonical cover pattern.
+            pinSpacing: false,
+            scrub: true,
+            anticipatePin: 1,
+            invalidateOnRefresh: true,
+            onRefresh: setOrigin,
+          },
+        });
+
+        // Recede + vanish early: by ~45% of the cover (card around mid-screen)
+        // the glow/copy/mockup are fully gone; only the dot field remains. The
+        // empty-object tween pads the timeline to duration 1 so the fade maps
+        // to the first ~45% of the scrubbed scroll range.
+        tl.to(wrap, { scale: 0.94, autoAlpha: 0, duration: 0.45 }, 0).to(
+          {},
+          { duration: 0.55 },
+          0.45,
+        );
+
+        return () => {
+          tl.scrollTrigger?.kill();
+          tl.kill();
+        };
+      });
+    }, hero);
+
+    return () => ctx.revert();
+  }, []);
+
   // Shared "lifted off the screen" treatment for the floating cards: a layered
   // ambient + brand-tinted shadow with a crisp top highlight, so they read as
   // physically hovering above the page rather than pasted onto it.
@@ -147,10 +218,26 @@ export function Hero() {
     "0 1px 2px rgba(16,24,40,0.04), 0 8px 16px -4px rgba(16,24,40,0.08), 0 20px 36px -10px rgba(16,24,40,0.12), 0 36px 70px -18px rgba(110,86,207,0.28), inset 0 1px 0 rgba(255,255,255,0.95)";
 
   return (
-    <section ref={heroRef} className="relative w-full overflow-x-clip pt-28 md:pt-[200px]" style={{ backgroundColor: "#F8F9FB" }} data-edit-section="Hero">
+    <section
+      ref={heroRef}
+      className="relative w-full overflow-x-clip"
+      style={{ backgroundColor: "#F8F9FB" }}
+      data-edit-section="Hero"
+    >
       {/* Interactive dot-field background — sits behind the purple glow and all
-          hero content, spanning the full hero. */}
-      <div aria-hidden className="pointer-events-none absolute inset-0 z-0">
+          hero content, spanning the full hero. Bottom-masked so the dots
+          dissolve into the next section instead of stopping on a hard line.
+          Deliberately OUTSIDE the recede wrapper: while the pinned hero is
+          covered, the glow/copy/mockup fade away but the dotted backdrop stays
+          visible behind the rising white card. */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0 z-0"
+        style={{
+          WebkitMaskImage: "linear-gradient(to bottom, black 0%, black 86%, transparent 100%)",
+          maskImage: "linear-gradient(to bottom, black 0%, black 86%, transparent 100%)",
+        }}
+      >
         <DotField
           dotRadius={1.5}
           dotSpacing={14}
@@ -165,13 +252,20 @@ export function Hero() {
         />
       </div>
 
+      {/* Recede wrapper — while the hero is pinned and the next section's white
+          card covers it, the scrubbed timeline scales this layer down and fades
+          it out (never the section itself: transforming the pinned element
+          breaks the pin). Holds the glow + all hero content but NOT the dot
+          field, so once faded only the dotted backdrop remains behind the card.
+          Carries the hero's top padding so its box (and the glow inside) spans
+          the full hero. */}
+      <div ref={recedeRef} className="relative w-full pt-28 will-change-transform md:pt-[200px]">
       <PurpleGlow />
 
       <div className="relative z-10 mx-auto flex w-full flex-col items-center gap-[72px] px-6 pt-[10px] md:gap-[120px] md:px-12 lg:px-20 xl:px-32 2xl:px-48">
-
         {/* Hero copy */}
         <div className="flex w-full max-w-[960px] flex-col items-center gap-9">
-        <div className="flex w-full flex-col items-center gap-7">
+          <div className="flex w-full flex-col items-center gap-7">
             {/* Headline */}
             <h1
               className="w-full text-center text-[2.25rem] font-bold text-neutral-900 sm:text-[3.25rem] lg:text-[5rem] xl:text-[5.5rem]"
@@ -230,25 +324,29 @@ export function Hero() {
           >
             <a
               href="/signup"
-              className="group inline-flex flex-1 items-center justify-center gap-2 rounded-[12px] bg-[#6E56CF] px-3 py-2.5 text-[14px] font-semibold text-white drop-shadow-[0_0_10px_rgba(170,153,236,0.3)] transition-[transform,filter] duration-200 hover:scale-[1.02] hover:drop-shadow-[0_0_16px_rgba(170,153,236,0.45)] active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-400/60 focus-visible:ring-offset-2 sm:flex-none sm:gap-2.5 sm:px-5 sm:py-2.5 sm:text-[15px]"
+              className={cn(
+                CTA_PRIMARY,
+                "flex-1 whitespace-nowrap px-3 py-2.5 text-[13px] sm:flex-none sm:gap-2.5 sm:px-5 sm:py-2.5 sm:text-[15px]",
+              )}
               data-edit-id="hero-cta-primary"
               data-edit-label="Primary CTA"
             >
-              Start free trial
-              <ArrowRight className="h-3.5 w-3.5 shrink-0 transition-transform duration-300 group-hover:translate-x-0.5" />
+              <GlareHover />
+              <span className="relative">Start free trial</span>
+              <ArrowRight className="relative h-3.5 w-3.5 shrink-0 transition-transform duration-300 group-hover:translate-x-0.5" />
             </a>
             <a
               href="#features"
-              className="inline-flex flex-1 items-center justify-center gap-2 rounded-[12px] border bg-white/40 px-3 py-2.5 text-[14px] font-semibold text-[#1d1d23] backdrop-blur-md transition-transform duration-200 hover:scale-[1.02] active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-400/60 focus-visible:ring-offset-2 sm:flex-none sm:gap-2.5 sm:px-5 sm:py-2.5 sm:text-[15px]"
-              style={{
-                borderColor: "var(--color-stroke-brand)",
-                boxShadow: "0 0 16px rgba(170, 153, 236, 0.25)",
-              }}
+              className={cn(
+                CTA_SECONDARY_LIGHT,
+                "flex-1 whitespace-nowrap px-3 py-2.5 text-[13px] sm:flex-none sm:gap-2.5 sm:px-5 sm:py-2.5 sm:text-[15px]",
+              )}
               data-edit-id="hero-cta-secondary"
               data-edit-label="Secondary CTA"
             >
               <Play className="h-3.5 w-3.5 shrink-0" fill="#1d1d23" />
-              See how it works
+              <span className="sm:hidden">How it works</span>
+              <span className="hidden sm:inline">See how it works</span>
             </a>
           </div>
           {/* Trial trust line — every self-serve plan starts with a 14-day
@@ -284,83 +382,87 @@ export function Hero() {
               {/* Floating cards are part of the same unit, so they scale and
                   bounce together with the dashboard. */}
               {/* Left floating: Daily Stats mini card */}
-            <div
-              className="absolute -left-20 top-[34%] z-20 hidden w-[248px] rounded-2xl border border-white/60 bg-white/55 p-5 backdrop-blur-xl backdrop-saturate-150 lg:block"
-              style={{ boxShadow: floatCardShadow }}
-              data-edit-id="float-daily-stats"
-              data-edit-label="Floating: Daily Stats"
-            >
-              <div className="flex items-center gap-2.5">
-                <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[rgba(110,86,207,0.15)]">
-                  <svg
-                    className="h-4 w-4 text-[#6E56CF]"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                  >
-                    <path d="M3 3v18h18M7 16V10M12 16V6M17 16v-4" />
-                  </svg>
-                </div>
-                <div>
-                  <p className="text-[13px] font-semibold text-[#111827]">Daily Stats</p>
-                  <p className="text-[10px] text-[#6b7280]">Last 5 days</p>
-                </div>
-              </div>
-              <div className="mt-4 flex h-[88px] items-end justify-between gap-2">
-                {[0.5, 0.65, 0.45, 0.85, 0.6].map((v, i) => (
-                  <div key={i} className="flex flex-1 flex-col items-center gap-1.5">
-                    <div
-                      className="w-full rounded-t-sm"
-                      style={{
-                        height: `${v * 70}px`,
-                        background: "linear-gradient(180deg, #8B79E6 0%, #6E56CF 100%)",
-                      }}
-                    />
-                    <span className="text-[9px] text-[#6b7280]">{["Mon", "Tue", "Wed", "Thu", "Fri"][i]}</span>
+              <div
+                className="absolute -left-20 top-[34%] z-20 hidden w-[248px] rounded-2xl border border-white/60 bg-white/55 p-5 backdrop-blur-xl backdrop-saturate-150 lg:block"
+                style={{ boxShadow: floatCardShadow }}
+                data-edit-id="float-daily-stats"
+                data-edit-label="Floating: Daily Stats"
+              >
+                <div className="flex items-center gap-2.5">
+                  <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[rgba(110,86,207,0.15)]">
+                    <svg
+                      className="h-4 w-4 text-[#6E56CF]"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                    >
+                      <path d="M3 3v18h18M7 16V10M12 16V6M17 16v-4" />
+                    </svg>
                   </div>
-                ))}
-              </div>
-              <div className="mt-3 border-t border-[#e5e7eb] pt-3">
-                <p className="text-[10px] text-[#6b7280]">Weekly Average</p>
-                <div className="flex items-baseline justify-between">
-                  <span className="text-[15px] font-bold text-[#1d1d23]">5.0 hours/day</span>
-                  <span className="text-[11px] font-semibold text-emerald-600">+12%</span>
+                  <div>
+                    <p className="text-[13px] font-semibold text-[#111827]">Daily Stats</p>
+                    <p className="text-[10px] text-[#6b7280]">Last 5 days</p>
+                  </div>
+                </div>
+                <div className="mt-4 flex h-[88px] items-end justify-between gap-2">
+                  {[0.5, 0.65, 0.45, 0.85, 0.6].map((v, i) => (
+                    <div key={i} className="flex flex-1 flex-col items-center gap-1.5">
+                      <div
+                        className="w-full rounded-t-sm"
+                        style={{
+                          height: `${v * 70}px`,
+                          background: "linear-gradient(180deg, #8B79E6 0%, #6E56CF 100%)",
+                        }}
+                      />
+                      <span className="text-[9px] text-[#6b7280]">
+                        {["Mon", "Tue", "Wed", "Thu", "Fri"][i]}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+                <div className="mt-3 border-t border-[#e5e7eb] pt-3">
+                  <p className="text-[10px] text-[#6b7280]">Weekly Average</p>
+                  <div className="flex items-baseline justify-between">
+                    <span className="text-[15px] font-bold text-[#1d1d23]">5.0 hours/day</span>
+                    <span className="text-[11px] font-semibold text-emerald-600">+12%</span>
+                  </div>
                 </div>
               </div>
-            </div>
 
-            {/* Right floating: Sarah Chen pill */}
-            <div
-              className="absolute -right-16 top-[16%] z-20 hidden w-[240px] items-center gap-3 rounded-[16px] border border-white/60 bg-white/55 p-3 backdrop-blur-xl backdrop-saturate-150 lg:flex"
-              style={{ boxShadow: floatCardShadow }}
-              data-edit-id="float-sarah-pill"
-              data-edit-label="Floating: Sarah Chen pill"
-            >
-              <img
-                src="/images/sarah-chen.jpg"
-                alt="Sarah Chen"
-                className="h-9 w-9 shrink-0 rounded-full border border-[rgba(110,86,207,0.4)] object-cover"
-              />
-              <div className="flex flex-1 flex-col">
-                <span className="text-[14px] text-[#4b5563]">Sarah Chen</span>
-                <span
-                  className="mt-1 inline-flex w-fit items-center rounded-[12px] px-2 py-0.5 text-[12px]"
-                  style={{
-                    backgroundColor: STATUS_STYLES[sarahStatus].bg,
-                    color: STATUS_STYLES[sarahStatus].color,
-                    boxShadow: STATUS_STYLES[sarahStatus].glow,
-                    transition:
-                      "background-color 0.4s ease, color 0.4s ease, box-shadow 0.4s ease",
-                  }}
-                >
-                  {STATUS_STYLES[sarahStatus].label}
-                </span>
+              {/* Right floating: Sarah Chen pill */}
+              <div
+                className="absolute -right-16 top-[16%] z-20 hidden w-[240px] items-center gap-3 rounded-[16px] border border-white/60 bg-white/55 p-3 backdrop-blur-xl backdrop-saturate-150 lg:flex"
+                style={{ boxShadow: floatCardShadow }}
+                data-edit-id="float-sarah-pill"
+                data-edit-label="Floating: Sarah Chen pill"
+              >
+                <img
+                  src="/images/sarah-chen.jpg"
+                  alt="Sarah Chen"
+                  className="h-9 w-9 shrink-0 rounded-full border border-[rgba(110,86,207,0.4)] object-cover"
+                />
+                <div className="flex flex-1 flex-col">
+                  <span className="text-[14px] text-[#4b5563]">Sarah Chen</span>
+                  <span
+                    className="mt-1 inline-flex w-fit items-center rounded-[12px] px-2 py-0.5 text-[12px]"
+                    style={{
+                      backgroundColor: STATUS_STYLES[sarahStatus].bg,
+                      color: STATUS_STYLES[sarahStatus].color,
+                      boxShadow: STATUS_STYLES[sarahStatus].glow,
+                      transition:
+                        "background-color 0.4s ease, color 0.4s ease, box-shadow 0.4s ease",
+                    }}
+                  >
+                    {STATUS_STYLES[sarahStatus].label}
+                  </span>
+                </div>
               </div>
-            </div>
             </div>
           </div>
         </div>
+      </div>
+      {/* end recede wrapper */}
       </div>
     </section>
   );

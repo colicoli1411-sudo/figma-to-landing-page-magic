@@ -1,5 +1,5 @@
 // Component ported from https://codepen.io/JuanFuentes/full/rgXKGQ
-import { useEffect, useRef, useState, useMemo, useCallback } from 'react';
+import { useEffect, useRef, useState, useMemo, useCallback } from "react";
 
 const dist = (a, b) => {
   const dx = b.x - a.x;
@@ -23,9 +23,9 @@ const debounce = (func, delay) => {
 };
 
 const TextPressure = ({
-  text = 'Compressa',
-  fontFamily = 'Compressa VF',
-  fontUrl = 'https://res.cloudinary.com/dr6lvwubh/raw/upload/v1529908256/CompressaPRO-GX.woff2',
+  text = "Compressa",
+  fontFamily = "Compressa VF",
+  fontUrl = "https://res.cloudinary.com/dr6lvwubh/raw/upload/v1529908256/CompressaPRO-GX.woff2",
 
   width = true,
   weight = true,
@@ -36,11 +36,16 @@ const TextPressure = ({
   stroke = false,
   scale = false,
 
-  textColor = '#FFFFFF',
-  strokeColor = '#FF0000',
-  className = '',
+  textColor = "#FFFFFF",
+  strokeColor = "#FF0000",
+  className = "",
 
   minFontSize = 24,
+
+  // Touch devices only: the user's scroll drives the invisible "cursor"
+  // across the title, so the wave moves exactly in step with their gesture
+  // and rests static the moment scrolling stops. Desktop keeps the mouse.
+  scrollDrive = false,
 }) => {
   const containerRef = useRef(null);
   const titleRef = useRef(null);
@@ -53,9 +58,11 @@ const TextPressure = ({
   const [scaleY, setScaleY] = useState(1);
   const [lineHeight, setLineHeight] = useState(1);
 
-  const chars = text.split('');
+  const chars = text.split("");
 
   useEffect(() => {
+    const isTouchDevice = window.matchMedia("(hover: none)").matches;
+
     const handleMouseMove = (e) => {
       cursorRef.current.x = e.clientX;
       cursorRef.current.y = e.clientY;
@@ -65,29 +72,59 @@ const TextPressure = ({
       cursorRef.current.x = t.clientX;
       cursorRef.current.y = t.clientY;
     };
+    // Scroll drive (touch only): map the title's progress through the
+    // viewport to a horizontal cursor position along the title, so the wave
+    // travels with the user's scroll and rests wherever they stop. The rAF
+    // loop's easing + settled guard turn this into smooth motion that
+    // freezes static at rest.
+    const handleScroll = () => {
+      const title = titleRef.current;
+      if (!title) return;
+      const rect = title.getBoundingClientRect();
+      const raw = (window.innerHeight - rect.top) / (window.innerHeight + rect.height);
+      const p = Math.min(1, Math.max(0, raw));
+      // The title sits at the end of the page, so its reachable progress
+      // range is roughly 0–0.65 — gain up so a natural scroll-in covers the
+      // full width of the wordmark.
+      const gained = Math.min(1, Math.max(0, (p - 0.1) * 1.8));
+      cursorRef.current.x = rect.left + gained * rect.width;
+      cursorRef.current.y = rect.top + rect.height / 2;
+    };
 
-    window.addEventListener('mousemove', handleMouseMove);
-    window.addEventListener('touchmove', handleTouchMove, { passive: true });
+    const useScrollDrive = scrollDrive && isTouchDevice;
+
+    window.addEventListener("mousemove", handleMouseMove);
+    // With scroll-drive active the finger's touchmove would fight the scroll
+    // handler over the cursor and jitter — scroll is the sole touch driver.
+    if (!useScrollDrive) {
+      window.addEventListener("touchmove", handleTouchMove, { passive: true });
+    }
+    if (useScrollDrive) {
+      window.addEventListener("scroll", handleScroll, { passive: true });
+      handleScroll();
+    }
 
     if (containerRef.current) {
       const { left, top, width, height } = containerRef.current.getBoundingClientRect();
       mouseRef.current.x = left + width / 2;
       mouseRef.current.y = top + height / 2;
-      cursorRef.current.x = mouseRef.current.x;
-      cursorRef.current.y = mouseRef.current.y;
+      if (!useScrollDrive) {
+        cursorRef.current.x = mouseRef.current.x;
+        cursorRef.current.y = mouseRef.current.y;
+      }
     }
 
     return () => {
-      window.removeEventListener('mousemove', handleMouseMove);
-      window.removeEventListener('touchmove', handleTouchMove);
+      window.removeEventListener("mousemove", handleMouseMove);
+      window.removeEventListener("touchmove", handleTouchMove);
+      window.removeEventListener("scroll", handleScroll);
     };
-  }, []);
+  }, [scrollDrive]);
 
   const setSize = useCallback(() => {
     if (!containerRef.current || !titleRef.current) return;
 
-    const { width: containerW, height: containerH } =
-      containerRef.current.getBoundingClientRect();
+    const { width: containerW, height: containerH } = containerRef.current.getBoundingClientRect();
 
     let newFontSize = containerW / (chars.length / 2);
     newFontSize = Math.max(newFontSize, minFontSize);
@@ -111,8 +148,8 @@ const TextPressure = ({
   useEffect(() => {
     const debouncedSetSize = debounce(setSize, 100);
     debouncedSetSize();
-    window.addEventListener('resize', debouncedSetSize);
-    return () => window.removeEventListener('resize', debouncedSetSize);
+    window.addEventListener("resize", debouncedSetSize);
+    return () => window.removeEventListener("resize", debouncedSetSize);
   }, [setSize]);
 
   useEffect(() => {
@@ -120,8 +157,8 @@ const TextPressure = ({
     // so it only runs while the wordmark is actually on screen, and not at all
     // for users preferring reduced motion.
     if (
-      typeof window !== 'undefined' &&
-      window.matchMedia('(prefers-reduced-motion: reduce)').matches
+      typeof window !== "undefined" &&
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches
     ) {
       return;
     }
@@ -135,8 +172,7 @@ const TextPressure = ({
 
       // Skip the expensive span pass while the smoothed cursor is at rest.
       const settled =
-        Math.abs(mouseRef.current.x - prevX) < 0.1 &&
-        Math.abs(mouseRef.current.y - prevY) < 0.1;
+        Math.abs(mouseRef.current.x - prevX) < 0.1 && Math.abs(mouseRef.current.y - prevY) < 0.1;
 
       if (titleRef.current && !settled) {
         const titleRect = titleRef.current.getBoundingClientRect();
@@ -175,7 +211,7 @@ const TextPressure = ({
     // Run the loop only while the wordmark is in the viewport.
     const container = containerRef.current;
     let observer = null;
-    if (container && typeof IntersectionObserver !== 'undefined') {
+    if (container && typeof IntersectionObserver !== "undefined") {
       observer = new IntersectionObserver(([entry]) => {
         if (entry.isIntersecting) {
           if (rafId == null) rafId = requestAnimationFrame(animate);
@@ -229,26 +265,26 @@ const TextPressure = ({
         }
       `}</style>
     ),
-    [fontFamily, fontUrl, textColor, strokeColor]
+    [fontFamily, fontUrl, textColor, strokeColor],
   );
 
   const dynamicClassName = [
-    'text-pressure-title',
+    "text-pressure-title",
     className,
-    flex ? 'tp-flex' : '',
-    stroke ? 'tp-stroke' : '',
+    flex ? "tp-flex" : "",
+    stroke ? "tp-stroke" : "",
   ]
     .filter(Boolean)
-    .join(' ');
+    .join(" ");
 
   return (
     <div
       ref={containerRef}
       style={{
-        position: 'relative',
-        width: '100%',
-        height: '100%',
-        overflow: 'hidden',
+        position: "relative",
+        width: "100%",
+        height: "100%",
+        overflow: "hidden",
       }}
     >
       {styleElement}
@@ -258,17 +294,17 @@ const TextPressure = ({
         className={dynamicClassName}
         style={{
           fontFamily,
-          textTransform: 'uppercase',
+          textTransform: "uppercase",
           fontSize: fontSize,
           lineHeight,
           transform: `scale(1, ${scaleY})`,
-          transformOrigin: 'left top',
+          transformOrigin: "left top",
           margin: 0,
-          textAlign: 'left',
-          userSelect: 'none',
-          whiteSpace: 'nowrap',
+          textAlign: "left",
+          userSelect: "none",
+          whiteSpace: "nowrap",
           fontWeight: 100,
-          width: '100%',
+          width: "100%",
           color: stroke ? undefined : textColor,
         }}
       >
@@ -278,7 +314,7 @@ const TextPressure = ({
             ref={(el) => (spansRef.current[i] = el)}
             data-char={char}
             style={{
-              display: 'inline-block',
+              display: "inline-block",
               color: stroke ? undefined : textColor,
             }}
           >

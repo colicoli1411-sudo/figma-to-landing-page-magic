@@ -1,11 +1,9 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useLayoutEffect, useRef } from "react";
 import type { ComponentType, SVGProps } from "react";
-import {
-  motion,
-  useAnimationControls,
-  useInView,
-  type Variants,
-} from "framer-motion";
+import { motion, useAnimationControls, useInView, type Variants } from "framer-motion";
+import gsap from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { computeMockupFinalWidth } from "@/lib/mockup-scale";
 import {
   SlackIcon,
   GmailIcon,
@@ -15,6 +13,8 @@ import {
   FigmaIcon,
 } from "./BrandIcons";
 import { SplitText } from "./SplitText";
+
+gsap.registerPlugin(ScrollTrigger);
 
 type FloatingApp = {
   id: string;
@@ -28,12 +28,54 @@ type FloatingApp = {
 /* Ordered as the chaos sequence fires:
    Top-Left → Top-Right → Mid-Left → Mid-Right → Bottom-Left → Bottom-Right. */
 const APPS: FloatingApp[] = [
-  { id: "slack", name: "Slack", Icon: SlackIcon, position: "left-[8%] top-[8%]", color: "#611F69", snippet: "Got a sec?" },
-  { id: "gmail", name: "Gmail", Icon: GmailIcon, position: "right-[8%] top-[12%]", color: "#EA4335", snippet: "URGENT" },
-  { id: "teams", name: "Teams", Icon: TeamsIcon, position: "left-[4%] top-[40%]", color: "#5B5FC7", snippet: "Meeting now" },
-  { id: "discord", name: "Discord", Icon: DiscordIcon, position: "right-[4%] top-[44%]", color: "#5865F2", snippet: "@everyone" },
-  { id: "whatsapp", name: "WhatsApp", Icon: WhatsAppIcon, position: "left-[6%] bottom-[10%]", color: "#25D366", snippet: "New message" },
-  { id: "figma", name: "Figma", Icon: FigmaIcon, position: "right-[12%] bottom-[8%]", color: "#F24E1E", snippet: "Left a comment" },
+  {
+    id: "slack",
+    name: "Slack",
+    Icon: SlackIcon,
+    position: "left-[7%] top-[12%]",
+    color: "#611F69",
+    snippet: "Got a sec?",
+  },
+  {
+    id: "gmail",
+    name: "Gmail",
+    Icon: GmailIcon,
+    position: "right-[7%] top-[14%]",
+    color: "#EA4335",
+    snippet: "URGENT",
+  },
+  {
+    id: "teams",
+    name: "Teams",
+    Icon: TeamsIcon,
+    position: "left-[4%] top-[43%]",
+    color: "#5B5FC7",
+    snippet: "Meeting now",
+  },
+  {
+    id: "discord",
+    name: "Discord",
+    Icon: DiscordIcon,
+    position: "right-[4%] top-[45%]",
+    color: "#5865F2",
+    snippet: "@everyone",
+  },
+  {
+    id: "whatsapp",
+    name: "WhatsApp",
+    Icon: WhatsAppIcon,
+    position: "left-[6%] bottom-[14%]",
+    color: "#25D366",
+    snippet: "New message",
+  },
+  {
+    id: "figma",
+    name: "Figma",
+    Icon: FigmaIcon,
+    position: "right-[10%] bottom-[12%]",
+    color: "#F24E1E",
+    snippet: "Left a comment",
+  },
 ];
 
 const FLOAT_CONFIG = [
@@ -90,25 +132,29 @@ const snippetVariants: Variants = {
 
 export function ContextSwitching() {
   const sectionRef = useRef<HTMLElement | null>(null);
-  // once: false → re-triggers every time the section enters view (scrolling
-  // down to it, back up to it, etc.). Fire early so it doesn't lag the scroll.
-  const inView = useInView(sectionRef, { once: false, amount: 0.15 });
+  const cardRef = useRef<HTMLDivElement | null>(null);
+  // once: false so the chaos loop can pause off-screen and resume on re-entry;
+  // fire early (amount 0.05) so fast scrolling doesn't outrun the entrance.
+  const inView = useInView(sectionRef, { once: false, amount: 0.05 });
   const cardControls = useAnimationControls();
+  // The entrance plays only once — after it, cards must NEVER return to the
+  // hidden state (re-hiding on exit meant fast scrolling could catch this
+  // section blank). Off-screen we only pause the chaos loop, not visibility.
+  const hasEnteredRef = useRef(false);
 
   useEffect(() => {
-    // Out of view → snap back to hidden so the entrance can replay on re-entry.
-    if (!inView) {
-      cardControls.set("hidden");
-      return;
-    }
+    // Out of view → just stop the loop (via cleanup); cards stay visible.
+    if (!inView) return;
     let cancelled = false;
-    const wait = (ms: number) =>
-      new Promise<void>((resolve) => setTimeout(resolve, ms));
+    const wait = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
 
     (async () => {
-      // Gradual staggered entrance for the floating cards (runs once).
-      await cardControls.start("enter");
-      if (cancelled) return;
+      // Gradual staggered entrance for the floating cards (first entry only).
+      if (!hasEnteredRef.current) {
+        await cardControls.start("enter");
+        if (cancelled) return;
+        hasEnteredRef.current = true;
+      }
 
       // Infinite, seamless loop: clean → staggered pop-ups → pause → repeat.
       while (!cancelled) {
@@ -134,30 +180,92 @@ export function ContextSwitching() {
     };
   }, [inView, cardControls]);
 
+  // Scroll-driven width expand (lg+, motion allowed only): as the white card
+  // rises up over the pinned hero, it widens from EXACTLY the mockup's final
+  // rendered width (shared math — lib/mockup-scale.ts) up to 1280px, so the
+  // card emerges matching the frozen mockup and grows past it. The range is
+  // geometrically locked to the hero's cover pin WITHOUT any cross-component
+  // wiring: this section starts exactly at the hero's bottom edge, so "section
+  // top hits viewport bottom" is the same scroll position as the pin's start
+  // ("hero bottom hits viewport bottom"). useLayoutEffect + fromTo
+  // (immediateRender) applies the from-state before first paint so there's no
+  // width flash. Scoped via gsap.context so one revert() cleans up on HMR.
+  // Below lg / reduced-motion the branch never runs, so the CSS default
+  // max-w-[1280px] stands (static, full-width card).
+  useLayoutEffect(() => {
+    const section = sectionRef.current;
+    const card = cardRef.current;
+    if (!section || !card) return;
+
+    const ctx = gsap.context(() => {
+      const mm = gsap.matchMedia();
+      mm.add("(min-width: 1024px) and (prefers-reduced-motion: no-preference)", () => {
+        // Function-based so invalidateOnRefresh re-measures after resize/late
+        // layout. Falls back to 960 if the hero mockup isn't in the DOM.
+        const mockupWidth = () => {
+          const scaleEl = document.querySelector<HTMLElement>(".hero-preview .origin-top");
+          return scaleEl ? computeMockupFinalWidth(scaleEl) : 960;
+        };
+        const tween = gsap.fromTo(
+          card,
+          { maxWidth: mockupWidth },
+          {
+            maxWidth: 1280,
+            ease: "none",
+            scrollTrigger: {
+              trigger: section,
+              start: "top bottom",
+              end: "top top",
+              scrub: true,
+              invalidateOnRefresh: true,
+            },
+          },
+        );
+        return () => {
+          tween.scrollTrigger?.kill();
+          tween.kill();
+        };
+      });
+    }, sectionRef);
+
+    return () => ctx.revert();
+  }, []);
+
   return (
     <section
       ref={sectionRef}
       id="context-switching"
-      className="relative w-full overflow-hidden py-24 md:py-32"
-      style={{ backgroundColor: "#F8F9FB" }}
+      className="relative w-full overflow-hidden bg-[#F8F9FB] px-4 py-24 sm:px-6 md:py-32 lg:z-20 lg:bg-transparent lg:px-8"
       data-edit-section="Context switching"
     >
-      {/* Depth — masked tech dot-grid. */}
+      {/* Depth — masked tech dot-grid. Hidden on lg: the section is transparent
+          there so the pinned hero shows through during the cover, and this
+          inset-0 layer would slide over the frozen hero and break the effect. */}
       <div
         aria-hidden
-        className="pointer-events-none absolute inset-0"
+        className="pointer-events-none absolute inset-0 lg:hidden"
         style={{
-          backgroundImage:
-            "radial-gradient(circle, rgba(110,86,207,0.18) 1px, transparent 1px)",
+          backgroundImage: "radial-gradient(circle, rgba(110,86,207,0.18) 1px, transparent 1px)",
           backgroundSize: "32px 32px",
           maskImage: "radial-gradient(circle at center, black 0%, transparent 70%)",
-          WebkitMaskImage:
-            "radial-gradient(circle at center, black 0%, transparent 70%)",
+          WebkitMaskImage: "radial-gradient(circle at center, black 0%, transparent 70%)",
         }}
       />
       {/* Ambient violet + sky glows — keep the page-wide colour flow continuous
-          between the Hero above and Features below. Subtle, fade before the edges. */}
-      <div aria-hidden className="pointer-events-none absolute inset-0">
+          between the Hero above and Features below. Edge-masked so the glows
+          dissolve to the plain base before the section boundary (no cut line
+          where overflow-hidden clips the blur). Hidden on lg for the same
+          reason as the dot-grid: nothing may paint over the pinned hero. */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0 lg:hidden"
+        style={{
+          WebkitMaskImage:
+            "linear-gradient(to bottom, transparent 0%, black 12%, black 88%, transparent 100%)",
+          maskImage:
+            "linear-gradient(to bottom, transparent 0%, black 12%, black 88%, transparent 100%)",
+        }}
+      >
         <div
           className="absolute -left-[10%] top-[6%] h-[620px] w-[620px] rounded-full opacity-50"
           style={{
@@ -176,7 +284,14 @@ export function ContextSwitching() {
         />
       </div>
 
-      <div className="relative mx-auto w-full max-w-[1280px] px-6 md:px-12 lg:px-20">
+      {/* White bounding card — encloses the copy + floating distraction cards.
+          Default max-w is 1280 (resting / reduced-motion / below-lg); on lg the
+          GSAP scrub drives it 960 → 1280 as the card rises over the frozen
+          mockup. overflow-hidden keeps the floats within the rounded bounds. */}
+      <div
+        ref={cardRef}
+        className="relative mx-auto w-full max-w-[1280px] overflow-hidden rounded-[28px] border border-black/5 bg-white px-6 py-16 shadow-[0_1px_2px_rgba(16,24,40,0.04),0_12px_32px_-8px_rgba(16,24,40,0.10),0_40px_80px_-24px_rgba(110,86,207,0.20)] md:px-12 lg:px-20 lg:py-24"
+      >
         {/* Floating distraction pop-ups — desktop spread. */}
         <motion.div
           className="pointer-events-none absolute inset-0 z-[2] hidden lg:block"
@@ -185,12 +300,7 @@ export function ContextSwitching() {
           variants={layerVariants}
         >
           {APPS.map((app, i) => (
-            <FloatingCard
-              key={app.id}
-              app={app}
-              index={i}
-              className={`absolute ${app.position}`}
-            />
+            <FloatingCard key={app.id} app={app} index={i} className={`absolute ${app.position}`} />
           ))}
         </motion.div>
 

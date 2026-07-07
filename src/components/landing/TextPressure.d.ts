@@ -15,6 +15,8 @@ interface TextPressureProps {
   strokeColor?: string;
   className?: string;
   minFontSize?: number;
+  /** Touch devices: scrolling drives the wave across the title; rests static. */
+  scrollDrive?: boolean;
 }
 
 declare const TextPressure: ComponentType<TextPressureProps>;
