@@ -25,9 +25,11 @@ export function computeMockupTargetScale(scaleEl: HTMLElement): number {
   const vw = document.documentElement.clientWidth;
   const floatingSafe = (vw / 2 - margin) / halfExtent;
   // Hard cap: the dashboard itself never grows past ~75% of the viewport
-  // width, so the expand stops at the target size.
+  // width, so the expand stops at the target size. Clamped to ≥1 — on wide
+  // viewports the 75vw cap can fall below the layout width, and without the
+  // clamp the "grow" tween would actually SHRINK the mockup while scrolling.
   const maxByDashboard = (vw * 0.75) / scaleEl.offsetWidth;
-  return Math.min(floatingSafe, maxByDashboard);
+  return Math.max(1, Math.min(floatingSafe, maxByDashboard));
 }
 
 /** The mockup's final on-screen width (px) once the scroll-grow completes. */

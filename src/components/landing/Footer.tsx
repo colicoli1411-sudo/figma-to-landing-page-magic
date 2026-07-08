@@ -59,7 +59,14 @@ export function Footer() {
               (left) + action button (right). Mirrors the desktop composition. */}
           <div className="lg:hidden">
             <div className="flex justify-center">
-              <Logo size={56} focusColor="#ffffff" flowColor="#D7CFF9" />
+              {/* Wordmark only (no lock mark) — sized large & dramatic, clamped
+                  so "FocusFlow" always stays on one line across mobile widths. */}
+              <span
+                className="whitespace-nowrap text-[clamp(3.5rem,16vw,5rem)] font-semibold leading-none text-white"
+                style={{ fontFamily: "'Poppins', sans-serif", letterSpacing: "-0.03em" }}
+              >
+                Focus<span style={{ color: "#D7CFF9" }}>Flow</span>
+              </span>
             </div>
             <div className="mt-7 flex items-center justify-between gap-4 border-t border-white/10 pt-6">
               <p className="max-w-[52%] text-[14px] leading-snug text-white/60">

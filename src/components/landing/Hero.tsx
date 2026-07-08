@@ -156,7 +156,9 @@ export function Hero() {
       mm.add("(min-width: 1024px) and (prefers-reduced-motion: no-preference)", () => {
         const st = ScrollTrigger.create({
           trigger: hero,
-          start: "bottom bottom",
+          // Freeze while the mockup still reads nearly whole on screen — its
+          // end at ~75% of the viewport height, not grazing the very bottom.
+          start: "bottom 75%",
           // Release as soon as the (nearly viewport-sized) card reaches the
           // top of the screen — it covers the whole viewport at that moment,
           // so the unpin is invisible and the page frees up quickly instead
@@ -219,15 +221,11 @@ export function Hero() {
         />
       </div>
 
-      {/* Recede wrapper — while the hero is pinned and the next section's card
-          covers it, ContextSwitching's synced cover timeline (which targets
-          [data-hero-recede]) scales this layer down and fades it out (never
-          the section itself: transforming the pinned element breaks the pin).
-          Holds the glow + all hero content but NOT the dot field, so once
-          faded only the dotted backdrop remains behind the card. Carries the
-          hero's top padding so its box (and the glow inside) spans the full
-          hero. */}
-      <div data-hero-recede className="relative w-full pt-28 will-change-transform md:pt-[200px]">
+      {/* Content wrapper — carries the hero's top padding so the absolute
+          background layers span the full hero box. The pinned hero itself no
+          longer scales or fades during the cover; the "next chapter" feel
+          comes from the scrim below, which darkens everything gently. */}
+      <div className="relative w-full pt-28 md:pt-[200px]">
       <PurpleGlow />
 
       <div className="relative z-10 mx-auto flex w-full flex-col items-center gap-[72px] px-6 pt-[10px] md:gap-[120px] md:px-12 lg:px-20 xl:px-32 2xl:px-48">
@@ -430,8 +428,19 @@ export function Hero() {
           </div>
         </div>
       </div>
-      {/* end recede wrapper */}
+      {/* end content wrapper */}
       </div>
+
+      {/* Chapter scrim — a neutral dark veil over the ENTIRE pinned hero
+          (dot field included). ContextSwitching's cover timeline fades it
+          0 → ~0.4 as the bright card rises, so the frozen backdrop gently
+          darkens and the card pops — "turning to the next chapter". */}
+      <div
+        aria-hidden
+        data-hero-scrim
+        className="pointer-events-none absolute inset-0 opacity-0"
+        style={{ backgroundColor: "#0f0f14" }}
+      />
     </section>
   );
 }

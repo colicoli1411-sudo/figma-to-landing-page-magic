@@ -207,9 +207,9 @@ export function ContextSwitching() {
   //   2. Surface corners: 28px → 0 as the card reaches full bleed.
   //   3. Floats frame: spreads with the card but stops well short of the
   //      viewport edges (frameFinal) — mirrored columns stay by the text.
-  //   4. Hero recede ([data-hero-recede], inside the pinned hero): scales
-  //      down and DIMS (never fully hides) — the card is visibly climbing
-  //      over the frozen mockup for the whole cover.
+  //   4. Hero scrim ([data-hero-scrim]): the frozen hero — mockup and dots,
+  //      size untouched — gently darkens to ~40% black, so the bright card
+  //      pops over it: the "next chapter" transition.
   // scrub: 1 (not true) lets the animation catch up to the scroll over ~1s —
   // buttery instead of rigidly wheel-locked. useLayoutEffect + fromTo
   // (immediateRender) applies all from-states before first paint (no flash);
@@ -242,28 +242,20 @@ export function ContextSwitching() {
         const heroSection = document.querySelector<HTMLElement>(
           'section[data-edit-section="Hero"]',
         );
-        const heroRecede = document.querySelector<HTMLElement>("[data-hero-recede]");
-        // Scale the receding hero around the point sitting at the viewport's
-        // centre while it's pinned (the hero is taller than the viewport, so
-        // keyword origins would drift). Recomputed on every refresh.
-        const setRecedeOrigin = () => {
-          if (heroSection && heroRecede) {
-            gsap.set(heroRecede, {
-              transformOrigin: `50% ${heroSection.offsetHeight - window.innerHeight / 2}px`,
-            });
-          }
-        };
-        setRecedeOrigin();
+        const heroScrim = document.querySelector<HTMLElement>("[data-hero-scrim]");
 
         const tl = gsap.timeline({
           defaults: { ease: "none", duration: 1 },
           scrollTrigger: {
-            trigger: card,
-            start: "top bottom",
+            // Start EXACTLY at the hero pin's start ("bottom 75%" — the same
+            // scroll position), so the scrim/width/corners all begin the
+            // instant the mockup freezes; complete when the card is centered.
+            trigger: heroSection ?? card,
+            start: heroSection ? "bottom 75%" : "top bottom",
+            endTrigger: card,
             end: "center center",
             scrub: 1,
             invalidateOnRefresh: true,
-            onRefresh: setRecedeOrigin,
           },
         });
 
@@ -275,11 +267,10 @@ export function ContextSwitching() {
         )
           .fromTo(surface, { borderRadius: 28 }, { borderRadius: 0 }, 0)
           .fromTo(floatsFrame, { width: frameBase }, { width: frameFinal }, 0);
-        if (heroRecede) {
-          // Dim, don't hide: the frozen mockup must stay visible so the card
-          // is SEEN climbing over it — that's the whole effect. The unpin is
-          // still hidden (hero is fully above the viewport at release).
-          tl.to(heroRecede, { scale: 0.94, opacity: 0.45 }, 0);
+        if (heroScrim) {
+          // Gently darken the frozen hero (mockup + dots, size untouched) so
+          // the bright card pops over it — the "next chapter" transition.
+          tl.fromTo(heroScrim, { opacity: 0 }, { opacity: 0.4 }, 0);
         }
 
         return () => {
