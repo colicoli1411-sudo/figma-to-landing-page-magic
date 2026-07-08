@@ -327,7 +327,7 @@ export function Hero() {
         {/* Mockup with floating overlays — static at the top, then scroll-driven
             expand to full viewport width. Dashboard + floating cards form one unit. */}
         <div
-          className="hero-preview relative w-full pb-[80px]"
+          className="hero-preview relative w-full pb-[80px] lg:-mb-[220px] lg:pb-0"
           data-edit-section="Dashboard mockup"
         >
           <div>

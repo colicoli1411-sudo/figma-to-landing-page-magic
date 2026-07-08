@@ -54,19 +54,22 @@ export function Footer() {
         {/* TOP BLOCK — mobile/tablet: a slim single row, logo one side / CTA the
             other; desktop (lg+): the interactive TextPressure mega-CTA, unchanged. */}
         <div className="border-b border-white/10 pb-10 lg:pb-20">
-          {/* Mobile/tablet — one thin, balanced row: mark left, a short
-              marketing line stacked right above the action on the right. */}
-          <div className="flex items-center justify-between gap-4 lg:hidden">
-            <Logo size={30} focusColor="#ffffff" flowColor="#D7CFF9" />
-            <div className="flex flex-col items-end gap-2">
-              <p className="text-[13px] font-medium tracking-tight text-white/55">
+          {/* Mobile/tablet — the desktop mega-CTA, scaled down: a large, dramatic
+              centered logo lockup, then a divider leading into a marketing line
+              (left) + action button (right). Mirrors the desktop composition. */}
+          <div className="lg:hidden">
+            <div className="flex justify-center">
+              <Logo size={56} focusColor="#ffffff" flowColor="#D7CFF9" />
+            </div>
+            <div className="mt-7 flex items-center justify-between gap-4 border-t border-white/10 pt-6">
+              <p className="max-w-[52%] text-[14px] leading-snug text-white/60">
                 Ready to reclaim focus?
               </p>
               <a
                 href="/signup"
                 className={cn(
                   CTA_SECONDARY_DARK,
-                  "shrink-0 gap-2 px-5 py-2.5 text-sm focus-visible:ring-offset-[#0A0A0F]",
+                  "shrink-0 gap-2 px-5 py-3 text-[14px] focus-visible:ring-offset-[#0A0A0F]",
                 )}
               >
                 Start free trial
@@ -104,7 +107,7 @@ export function Footer() {
               />
             </div>
             <div className="mt-10 flex flex-row items-center justify-between gap-6">
-              <p className="max-w-md text-base text-white/70">Quiet the noise. Ship the work.</p>
+              <p className="max-w-md text-base text-white/70">Ready to reclaim focus?</p>
               <a
                 href="/signup"
                 className={cn(

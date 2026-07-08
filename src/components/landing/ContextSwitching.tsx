@@ -13,6 +13,7 @@ import {
   FigmaIcon,
 } from "./BrandIcons";
 import { SplitText } from "./SplitText";
+import DotField from "./DotField";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -23,58 +24,69 @@ type FloatingApp = {
   position: string;
   color: string;
   snippet: string;
+  time: string;
 };
 
 /* Ordered as the chaos sequence fires:
-   Top-Left → Top-Right → Mid-Left → Mid-Right → Bottom-Left → Bottom-Right. */
+   Top-Left → Top-Right → Mid-Left → Mid-Right → Bottom-Left → Bottom-Right.
+   Two MIRRORED columns of three flanking the centered copy — identical
+   insets on both sides so the composition reads deliberate. The middle pair
+   hugs the card edge (2%), clearing the headline once the card is at cover
+   width; top/bottom pairs sit above/below the text band. */
 const APPS: FloatingApp[] = [
   {
     id: "slack",
     name: "Slack",
     Icon: SlackIcon,
-    position: "left-[7%] top-[12%]",
+    position: "left-[5%] top-[9%]",
     color: "#611F69",
-    snippet: "Got a sec?",
+    snippet: "Got a sec? Quick question about the API…",
+    time: "now",
   },
   {
     id: "gmail",
     name: "Gmail",
     Icon: GmailIcon,
-    position: "right-[7%] top-[14%]",
+    position: "right-[5%] top-[9%]",
     color: "#EA4335",
-    snippet: "URGENT",
+    snippet: "URGENT: Client feedback needed today",
+    time: "2m",
   },
   {
     id: "teams",
     name: "Teams",
     Icon: TeamsIcon,
-    position: "left-[4%] top-[43%]",
+    position: "left-[2%] top-[45%]",
     color: "#5B5FC7",
-    snippet: "Meeting now",
+    snippet: "Design sync starting now — join?",
+    time: "now",
   },
   {
     id: "discord",
     name: "Discord",
     Icon: DiscordIcon,
-    position: "right-[4%] top-[45%]",
+    position: "right-[2%] top-[45%]",
     color: "#5865F2",
-    snippet: "@everyone",
+    snippet: "@everyone the new build is live",
+    time: "5m",
   },
   {
     id: "whatsapp",
     name: "WhatsApp",
     Icon: WhatsAppIcon,
-    position: "left-[6%] bottom-[14%]",
+    position: "left-[5%] bottom-[9%]",
     color: "#25D366",
-    snippet: "New message",
+    snippet: "Hey! Are we still on for tonight?",
+    time: "8m",
   },
   {
     id: "figma",
     name: "Figma",
     Icon: FigmaIcon,
-    position: "right-[10%] bottom-[12%]",
+    position: "right-[5%] bottom-[9%]",
     color: "#F24E1E",
-    snippet: "Left a comment",
+    snippet: "Maya left a comment on Hero v2",
+    time: "12m",
   },
 ];
 
@@ -133,11 +145,12 @@ const snippetVariants: Variants = {
 export function ContextSwitching() {
   const sectionRef = useRef<HTMLElement | null>(null);
   const cardRef = useRef<HTMLDivElement | null>(null);
-  // The card's white "skin" (bg + border + shadow). Stays fully opaque
-  // through the cover; only its corner radius animates.
+  // The card's white "skin" (bg + dot field + lavender centre). Stays fully
+  // opaque through the cover; only its corner radius animates.
   const surfaceRef = useRef<HTMLDivElement | null>(null);
-  // Centered frame the floating cards anchor to — hugs the text column and
-  // widens only marginally while the card expands to full bleed around it.
+  // Centered frame the floating cards anchor to. Starts inside the card's
+  // entry width and stops well short of the viewport edges, so the mirrored
+  // columns spread with the card but never reach the screen edge.
   const floatsFrameRef = useRef<HTMLDivElement | null>(null);
   // once: false so the chaos loop can pause off-screen and resume on re-entry;
   // fire early (amount 0.05) so fast scrolling doesn't outrun the entrance.
@@ -192,10 +205,11 @@ export function ContextSwitching() {
   //   1. Card width: the mockup's exact final width (shared math —
   //      lib/mockup-scale.ts) → full viewport bleed.
   //   2. Surface corners: 28px → 0 as the card reaches full bleed.
-  //   3. Floats frame: hugs the text column (capped base width) and widens at
-  //      only ~10% of the leftover space — the floats barely drift.
+  //   3. Floats frame: spreads with the card but stops well short of the
+  //      viewport edges (frameFinal) — mirrored columns stay by the text.
   //   4. Hero recede ([data-hero-recede], inside the pinned hero): scales
-  //      down + fades out, revealing the dot field that stays behind.
+  //      down and DIMS (never fully hides) — the card is visibly climbing
+  //      over the frozen mockup for the whole cover.
   // scrub: 1 (not true) lets the animation catch up to the scroll over ~1s —
   // buttery instead of rigidly wheel-locked. useLayoutEffect + fromTo
   // (immediateRender) applies all from-states before first paint (no flash);
@@ -218,15 +232,12 @@ export function ContextSwitching() {
           const scaleEl = document.querySelector<HTMLElement>(".hero-preview .origin-top");
           return scaleEl ? computeMockupFinalWidth(scaleEl) : 960;
         };
-        // Floats hug the text column: base width capped at 1100px (on wide
-        // screens the mockup itself is far wider — anchoring to it would
-        // scatter the floats), then a mere 10% of the leftover space as
-        // drift while the card grows to full bleed.
-        const frameBase = () => Math.min(mockupWidth(), 1100);
-        const frameEnd = () => {
-          const b = frameBase();
-          return b + 0.1 * Math.max(0, window.innerWidth - b);
-        };
+        // Floats frame: final width leaves ≥48px to each viewport edge and is
+        // capped at ~1584px (text column + two notification columns + air),
+        // so on wide screens the floats stay near the headline. Entry width
+        // never exceeds the card's own entry width (no clipping).
+        const frameFinal = () => Math.min(window.innerWidth - 96, 1584);
+        const frameBase = () => Math.min(mockupWidth(), frameFinal());
 
         const heroSection = document.querySelector<HTMLElement>(
           'section[data-edit-section="Hero"]',
@@ -263,9 +274,12 @@ export function ContextSwitching() {
           0,
         )
           .fromTo(surface, { borderRadius: 28 }, { borderRadius: 0 }, 0)
-          .fromTo(floatsFrame, { width: frameBase }, { width: frameEnd }, 0);
+          .fromTo(floatsFrame, { width: frameBase }, { width: frameFinal }, 0);
         if (heroRecede) {
-          tl.to(heroRecede, { scale: 0.94, autoAlpha: 0 }, 0);
+          // Dim, don't hide: the frozen mockup must stay visible so the card
+          // is SEEN climbing over it — that's the whole effect. The unpin is
+          // still hidden (hero is fully above the viewport at release).
+          tl.to(heroRecede, { scale: 0.94, opacity: 0.45 }, 0);
         }
 
         return () => {
@@ -282,7 +296,7 @@ export function ContextSwitching() {
     <section
       ref={sectionRef}
       id="context-switching"
-      className="relative w-full overflow-hidden bg-[#F8F9FB] px-4 py-24 sm:px-6 md:py-32 lg:z-20 lg:bg-transparent lg:px-0"
+      className="relative w-full overflow-hidden bg-[#F8F9FB] px-4 py-24 sm:px-6 md:py-32 lg:z-20 lg:bg-transparent lg:px-0 lg:pt-10"
       data-edit-section="Context switching"
     >
       {/* Depth — masked tech dot-grid. Hidden on lg: the section is transparent
@@ -342,26 +356,57 @@ export function ContextSwitching() {
         id="context-cover-card"
         className="relative mx-auto flex w-full max-w-[1280px] flex-col justify-center overflow-hidden px-6 py-16 md:px-12 lg:min-h-[90vh] lg:px-20 lg:py-24"
       >
-        {/* Card surface — clean white skin with a subtle violet-tinted border
-            and the deep brand shadow, on its own layer so the cover timeline
-            can animate just its corner radius. Fully opaque the whole ride:
-            the cover reads through motion and the crisp edge, not effects. */}
+        {/* Card surface — white skin with a subtle violet-tinted border and
+            the deep brand shadow, on its own layer so the cover timeline can
+            animate just its corner radius. Inside: a violet dot grid across
+            the whole card with a wide soft lavender ellipse over its centre —
+            the dots peek out only at the margins around the content glow.
+            overflow-hidden clips both to the animated rounded corners. */}
         <div
           ref={surfaceRef}
           aria-hidden
-          className="pointer-events-none absolute inset-0 rounded-[28px] border border-[#6E56CF]/15 bg-white shadow-[0_1px_2px_rgba(16,24,40,0.04),0_12px_32px_-8px_rgba(16,24,40,0.10),0_40px_80px_-24px_rgba(110,86,207,0.20)]"
-        />
+          className="pointer-events-none absolute inset-0 overflow-hidden rounded-[28px] border border-[#6E56CF]/25 bg-white shadow-[0_-8px_24px_-8px_rgba(110,86,207,0.18),0_1px_2px_rgba(16,24,40,0.04),0_12px_32px_-8px_rgba(16,24,40,0.16),0_40px_80px_-24px_rgba(110,86,207,0.20)]"
+        >
+          {/* Dot field — the EXACT same canvas treatment as the hero and FAQ
+              (DotField, radius 1.5 / spacing 14). Fixed at viewport width and
+              centered (not inset-0): DotField only re-measures its parent on
+              window resize, so a card-tracking parent would leave the canvas
+              stuck at the card's entry width once it expands — a screen-wide
+              parent stays valid at every card width and the surface clips it. */}
+          <div className="absolute left-1/2 top-0 h-full w-screen -translate-x-1/2">
+            <DotField
+              dotRadius={1.5}
+              dotSpacing={14}
+              bulgeStrength={0}
+              glowRadius={0}
+              sparkle={false}
+              waveAmplitude={0}
+              cursorRadius={0}
+              cursorForce={0}
+              gradientFrom="#6E56CF"
+              glowColor="#fcfbff"
+            />
+          </div>
+          {/* Lavender centre — large soft circle behind the copy, big enough
+              that the floating notifications sit on its visible rim; only the
+              card's outer margins keep bare dots. */}
+          <div
+            className="absolute inset-0"
+            style={{
+              background:
+                "radial-gradient(ellipse 80% 90% at center, rgba(110,86,207,0.15) 0%, rgba(110,86,207,0.09) 50%, rgba(110,86,207,0.04) 75%, transparent 95%)",
+            }}
+          />
+        </div>
 
-        {/* Floats frame — a centered anchor the floating cards position
-            against. Its base width hugs the text column (capped at 1100px)
-            and the cover timeline widens it by only ~10% of the leftover
-            space, so the floats stay an intimate cluster around the headline
-            while the card grows to full bleed around them. */}
+        {/* Floats frame — the mirrored notification columns anchor to this
+            centered frame, NOT the card: it grows with the cover but stops
+            well short of the viewport edges (see frameFinal), keeping the
+            floats flanking the headline instead of riding to the screen edge. */}
         <div
           ref={floatsFrameRef}
           className="pointer-events-none absolute left-1/2 top-0 z-[2] hidden h-full w-full -translate-x-1/2 lg:block"
         >
-          {/* Floating distraction pop-ups — desktop spread. */}
           <motion.div
             className="pointer-events-none absolute inset-0"
             initial="hidden"
@@ -395,9 +440,10 @@ export function ContextSwitching() {
           />
         </div>
 
-        {/* Tablet + mobile fallback — stacked grid below lg. Same choreography. */}
+        {/* Tablet + mobile fallback — stacked grid below lg. Same choreography.
+            Single column (two on sm) — the notification layout needs the row. */}
         <motion.div
-          className="mt-12 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:hidden"
+          className="mt-12 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:hidden"
           initial="hidden"
           animate={cardControls}
           variants={layerVariants}
@@ -420,11 +466,11 @@ function FloatingCard({
   index: number;
   className: string;
 }) {
-  const { Icon, name, id, color, snippet } = app;
+  const { Icon, name, id, color, snippet, time } = app;
   const cfg = FLOAT_CONFIG[index % FLOAT_CONFIG.length];
   return (
     <motion.div
-      className={`floating-distraction-card pointer-events-auto inline-flex items-center gap-3 rounded-2xl border border-white/40 bg-white/80 p-[14px] backdrop-blur-md lg:gap-2 lg:p-[11px] xl:gap-3 xl:p-[14px] ${className}`}
+      className={`floating-distraction-card pointer-events-auto flex w-full items-start gap-3 rounded-2xl border border-white/40 bg-white/80 p-[14px] backdrop-blur-md lg:w-[280px] xl:w-[310px] ${className}`}
       style={{
         boxShadow:
           "0 1px 2px rgba(16,24,40,0.04), 0 4px 12px -4px rgba(16,24,40,0.06), 0 12px 24px -8px rgba(16,24,40,0.08), 0 20px 40px -12px rgba(110,86,207,0.18), inset 0 1px 0 rgba(255,255,255,0.6)",
@@ -435,10 +481,10 @@ function FloatingCard({
       data-edit-label={`App: ${name}`}
     >
       <span
-        className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-xl lg:h-9 lg:w-9 xl:h-10 xl:w-10"
+        className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-xl"
         style={{ backgroundColor: `${color}1a` }}
       >
-        <Icon className="h-5 w-5 lg:h-4 lg:w-4 xl:h-5 xl:w-5" />
+        <Icon className="h-5 w-5" />
         {/* Red notification dot — hidden until the chaos phase. */}
         <motion.span
           className="absolute -right-1 -top-1 h-3 w-3 rounded-full border-2 border-white bg-red-500"
@@ -446,13 +492,20 @@ function FloatingCard({
           variants={dotVariants}
         />
       </span>
-      <span className="flex flex-col items-start pr-1 text-left">
-        <span className="text-[14px] font-semibold leading-tight text-[#111827] lg:text-[13px] xl:text-[14px]">
-          {name}
+      <span className="flex min-w-0 flex-1 flex-col items-start gap-0.5 text-left">
+        <span className="flex w-full items-baseline justify-between gap-2">
+          <span className="text-[14px] font-semibold leading-tight text-[#111827]">{name}</span>
+          {/* Timestamp — appears with the message during chaos. */}
+          <motion.span
+            className="shrink-0 text-[11px] font-medium leading-tight text-[#9ca3af]"
+            variants={snippetVariants}
+          >
+            {time}
+          </motion.span>
         </span>
-        {/* Notification snippet — fades in during chaos. */}
+        {/* Notification message — fades in during chaos. */}
         <motion.span
-          className="text-[11px] font-medium leading-tight text-[#6b7280] lg:text-[10px] xl:text-[11px]"
+          className="w-full truncate text-[12px] font-medium leading-snug text-[#6b7280]"
           variants={snippetVariants}
         >
           {snippet}

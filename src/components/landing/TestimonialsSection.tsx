@@ -183,6 +183,13 @@ function TestimonialCard({ t, isActive }: { t: Testimonial; isActive?: boolean }
 // duration used for the settling cards below (duration-[900ms]).
 const SETTLE_MS = 900;
 
+// 3D layout constants — shared between the render transforms and the click
+// picker so a card's on-screen position and its click target can never drift.
+// PERSPECTIVE is the wrapper's `perspective`; DEPTH_STEP is how far each step
+// out from centre is pushed back in Z (`translateZ = -abs * DEPTH_STEP`).
+const PERSPECTIVE = 1600;
+const DEPTH_STEP = 180;
+
 function CurvedCarousel({
   items,
   autoplay = true,
@@ -332,6 +339,36 @@ function CurvedCarousel({
     return nearestIdx;
   }, [active, dirSign, spacing, items.length]);
 
+  // Map a click's screen-x to the card the user meant. Because the cards live in
+  // a `preserve-3d` context, the centre card intercepts pointer hits over the
+  // side cards (z-index is ignored there), so a per-card onClick is unreliable.
+  // Instead we invert the layout math: a card at signed offset k projects to
+  //   screenX(k) = centerX + dirSign*k*spacing * PERSPECTIVE/(PERSPECTIVE+|k|*DEPTH_STEP)
+  // and we pick the k whose projected centre is nearest the click.
+  const pickNearest = useCallback(
+    (clickX: number): number | null => {
+      const el = containerRef.current;
+      if (!el) return null;
+      const rect = el.getBoundingClientRect();
+      const centerX = rect.left + rect.width / 2;
+      let bestK = 0;
+      let bestDist = Infinity;
+      for (let k = -3; k <= 3; k++) {
+        const screenX =
+          centerX +
+          dirSign * k * spacing * (PERSPECTIVE / (PERSPECTIVE + Math.abs(k) * DEPTH_STEP));
+        const dist = Math.abs(clickX - screenX);
+        if (dist < bestDist) {
+          bestDist = dist;
+          bestK = k;
+        }
+      }
+      if (bestK === 0) return null; // already centred
+      return (active + bestK + items.length) % items.length;
+    },
+    [active, dirSign, spacing, items.length],
+  );
+
   const onPointerDown = (e: React.PointerEvent) => {
     // Interrupt any in-flight settle glide when a new drag begins.
     if (settleRaf.current != null) {
@@ -377,9 +414,20 @@ function CurvedCarousel({
   const onPointerUp = (e: React.PointerEvent) => {
     const s = dragState.current;
     if (!s || s.axis !== "x") {
+      // A genuine tap never locked an axis (moved < 8px on both). A locked "y"
+      // axis is a vertical scroll and must NOT focus a card.
+      const wasTap =
+        !!s &&
+        s.axis === null &&
+        Math.abs(e.clientX - s.startX) < 8 &&
+        Math.abs(e.clientY - s.startY) < 8;
       dragState.current = null;
       setIsDragging(false);
       setDragOffset(0);
+      if (wasTap) {
+        const target = pickNearest(e.clientX);
+        if (target != null) setActive(target); // eased 500ms glide to centre
+      }
       return;
     }
     const newIndex = calculateNearestIndex();
@@ -411,7 +459,7 @@ function CurvedCarousel({
   return (
     <div
       className="relative w-full"
-      style={{ perspective: "1600px" }}
+      style={{ perspective: `${PERSPECTIVE}px` }}
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
       onTouchStart={() => setPaused(true)}
@@ -445,7 +493,7 @@ function CurvedCarousel({
           const abs = Math.abs(fractional);
           const isCenter = Math.abs(offset) === 0;
           const translateX = dirSign * fractional * spacing;
-          const translateZ = -abs * 180;
+          const translateZ = -abs * DEPTH_STEP;
           const rotateY = dirSign * fractional * -18;
           const scaleVal = abs < 1 ? 1 - abs * 0.08 : abs < 2 ? 0.92 - (abs - 1) * 0.12 : 0.8;
           const opacityVal =
@@ -465,7 +513,6 @@ function CurvedCarousel({
           return (
             <div
               key={t.name}
-              onClick={() => !isCenter && !isDragging && setActive(i)}
               className={`absolute top-0 left-1/2 ${
                 isDragging
                   ? ""
