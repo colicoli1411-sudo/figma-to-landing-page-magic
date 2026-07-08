@@ -122,7 +122,8 @@ export function Hero() {
             // that, so cap the range to end exactly at pin start. Keeps the
             // mockup from still growing while it's supposed to be frozen.
             end: () => "+=" + Math.min(520, Math.max(1, hero.offsetHeight - window.innerHeight)),
-            scrub: true,
+            // Catch-up smoothing (~1s) instead of a hard wheel lock.
+            scrub: 1,
             invalidateOnRefresh: true,
           },
         },
@@ -139,15 +140,12 @@ export function Hero() {
 
   // Cover pin: when the hero's bottom reaches the viewport bottom (the user
   // hits the end of the mockup), the ENTIRE hero — background included — pins
-  // in place with no spacer, so the next section scrolls up OVER it. The pin
-  // holds until the whole context section has scrolled past (endTrigger), so
-  // the dotted backdrop stays frozen behind the rising card the entire ride
-  // and the unpin happens only once the opaque Features section covers the
-  // viewport — invisible. Pure pin, no timeline: the cover choreography (this
-  // hero's recede included — see [data-hero-recede] on the wrapper below) is
-  // driven by ONE synced timeline in ContextSwitching. Scoped via gsap.context
-  // so a single revert() tears down the pin cleanly on HMR/remount (same
-  // pattern as the Features pin).
+  // in place with no spacer, so the next section's card scrolls up OVER it.
+  // Pure pin, no timeline: the cover choreography (this hero's recede
+  // included — see [data-hero-recede] on the wrapper below) is driven by ONE
+  // synced timeline in ContextSwitching. Scoped via gsap.context so a single
+  // revert() tears down the pin cleanly on HMR/remount (same pattern as the
+  // Features pin).
   useEffect(() => {
     const hero = heroRef.current;
     if (!hero) return;
@@ -159,8 +157,12 @@ export function Hero() {
         const st = ScrollTrigger.create({
           trigger: hero,
           start: "bottom bottom",
-          endTrigger: "#context-switching",
-          end: "bottom top",
+          // Release as soon as the (nearly viewport-sized) card reaches the
+          // top of the screen — it covers the whole viewport at that moment,
+          // so the unpin is invisible and the page frees up quickly instead
+          // of feeling stuck for the whole section.
+          endTrigger: "#context-cover-card",
+          end: "top top",
           pin: true,
           // No spacer: the following section keeps its document position and
           // rides up over the pinned hero — the canonical cover pattern.

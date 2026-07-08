@@ -20,6 +20,12 @@ const GREY = "#9CA3AF";
 const GREEN = "#10B981";
 const CARD_SHADOW = "0px 1px 3px 0px rgba(0,0,0,0.08), 0px 1px 2px -1px rgba(0,0,0,0.1)";
 
+// Shared close duration — the bar chart and the donut collapse in lockstep, so
+// this single value drives both transitions (see `closing` branches below).
+const CLOSE_MS = 600;
+// Donut draw-in duration (opening) — snappier than the old 800ms.
+const OPEN_PIE_MS = 450;
+
 // Focus Trend — Mon…Sun, scale 0–12 (matches the Figma y-axis).
 const BARS = [
   { label: "Mon", v: 5 },
@@ -47,30 +53,32 @@ const prefersReduced = () =>
 export function AnalyticsMockup() {
   const [barsOn, setBarsOn] = useState(prefersReduced);
   const [pieOn, setPieOn] = useState(prefersReduced);
+  // True only during the close phase — switches both charts to the shared,
+  // un-staggered CLOSE_MS transition so they collapse as one motion.
+  const [closing, setClosing] = useState(false);
 
   useEffect(() => {
     if (prefersReduced()) return;
-    // Fully sequenced so nothing overlaps: grow bars → draw snake → hold →
-    // empty snake (bars stay) → collapse bars → loop.
+    // Open in sequence (grow bars → draw snake → hold), then close BOTH charts
+    // at once: same duration, no stagger, so they start and finish together.
     let step = 0;
     let id: ReturnType<typeof setTimeout>;
     const tick = () => {
       if (step === 0) {
-        setBarsOn(true); // grow bars
+        setClosing(false);
+        setBarsOn(true); // grow bars (staggered)
         step = 1;
         id = setTimeout(tick, 1000);
       } else if (step === 1) {
-        setPieOn(true); // draw the snake (0.8s), then hold
+        setPieOn(true); // draw the snake, then hold
         step = 2;
-        id = setTimeout(tick, 800 + 1600);
-      } else if (step === 2) {
-        setPieOn(false); // empty the snake — wait until it's fully gone
-        step = 3;
-        id = setTimeout(tick, 800 + 250);
+        id = setTimeout(tick, OPEN_PIE_MS + 1600);
       } else {
-        setBarsOn(false); // only now collapse the bars, then loop
+        setClosing(true); // collapse bars + empty snake in lockstep
+        setBarsOn(false);
+        setPieOn(false);
         step = 0;
-        id = setTimeout(tick, 700);
+        id = setTimeout(tick, CLOSE_MS + 200);
       }
     };
     id = setTimeout(tick, 500);
@@ -163,7 +171,9 @@ export function AnalyticsMockup() {
                             height: "100%",
                             transformOrigin: "bottom",
                             transform: barsOn ? "scaleY(1)" : "scaleY(0)",
-                            transition: `transform 0.5s cubic-bezier(0.22,1,0.36,1) ${i * 70}ms`,
+                            transition: closing
+                              ? `transform ${CLOSE_MS}ms ease`
+                              : `transform 0.5s cubic-bezier(0.22,1,0.36,1) ${i * 70}ms`,
                             background: `linear-gradient(180deg, ${LIGHT_VIOLET} 0%, ${BRAND} 100%)`,
                           }}
                         />
@@ -192,7 +202,7 @@ export function AnalyticsMockup() {
               Distraction Breakdown
             </span>
             <div className="mt-[1cqw] flex min-h-0 flex-1 items-center gap-[2cqw]">
-              <Donut on={pieOn} />
+              <Donut on={pieOn} closing={closing} />
               <ul className="flex flex-col gap-[1cqw]">
                 {SEGMENTS.map((s) => (
                   <li key={s.label} className="flex items-center gap-[1cqw]">
@@ -261,7 +271,7 @@ function StatCard({
   );
 }
 
-function Donut({ on }: { on: boolean }) {
+function Donut({ on, closing }: { on: boolean; closing: boolean }) {
   const R = 32;
   const SW = 13;
   const maskId = useId();
@@ -293,7 +303,9 @@ function Donut({ on }: { on: boolean }) {
             style={{
               strokeLinecap: "butt",
               strokeDasharray: on ? "100 100" : "0 100",
-              transition: "stroke-dasharray 0.8s linear",
+              transition: closing
+                ? `stroke-dasharray ${CLOSE_MS}ms ease`
+                : `stroke-dasharray ${OPEN_PIE_MS}ms linear`,
             }}
           />
         </mask>

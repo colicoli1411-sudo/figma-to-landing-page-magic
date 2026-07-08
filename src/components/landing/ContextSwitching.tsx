@@ -133,11 +133,9 @@ const snippetVariants: Variants = {
 export function ContextSwitching() {
   const sectionRef = useRef<HTMLElement | null>(null);
   const cardRef = useRef<HTMLDivElement | null>(null);
-  // The card's dark "skin" (ink bg + aurora glows + light dot grid). Stays
-  // fully opaque through the cover; only its corner radius animates.
+  // The card's white "skin" (bg + border + shadow). Stays fully opaque
+  // through the cover; only its corner radius animates.
   const surfaceRef = useRef<HTMLDivElement | null>(null);
-  // Center copy block — lags slightly behind the card while it rises (depth).
-  const textBlockRef = useRef<HTMLDivElement | null>(null);
   // Centered frame the floating cards anchor to — hugs the text column and
   // widens only marginally while the card expands to full bleed around it.
   const floatsFrameRef = useRef<HTMLDivElement | null>(null);
@@ -190,28 +188,26 @@ export function ContextSwitching() {
 
   // The cover choreography (lg+, motion allowed only) — ONE scrubbed timeline
   // spanning from "card enters at the viewport bottom" to "card centered in
-  // the viewport", so every strand stays in perfect sync:
+  // the viewport", deliberately minimal so the motion reads calm:
   //   1. Card width: the mockup's exact final width (shared math —
-  //      lib/mockup-scale.ts) → full viewport bleed. The dark surface stays
-  //      fully opaque — the cover reads through motion + contrast.
+  //      lib/mockup-scale.ts) → full viewport bleed.
   //   2. Surface corners: 28px → 0 as the card reaches full bleed.
   //   3. Floats frame: hugs the text column (capped base width) and widens at
   //      only ~10% of the leftover space — the floats barely drift.
-  //   4. Inner parallax: the copy + floats start slightly low inside the card
-  //      and settle to 0 — the content lags a touch behind the card (depth).
-  //   5. Hero recede ([data-hero-recede], inside the pinned hero): scales
+  //   4. Hero recede ([data-hero-recede], inside the pinned hero): scales
   //      down + fades out, revealing the dot field that stays behind.
-  // useLayoutEffect + fromTo (immediateRender) applies all from-states before
-  // first paint (no flash); gsap.context scoped to the section reverts
-  // everything — including the hero-side recede styles — in one call on HMR.
-  // Below lg / reduced-motion the branch never runs: static dark card.
+  // scrub: 1 (not true) lets the animation catch up to the scroll over ~1s —
+  // buttery instead of rigidly wheel-locked. useLayoutEffect + fromTo
+  // (immediateRender) applies all from-states before first paint (no flash);
+  // gsap.context scoped to the section reverts everything — including the
+  // hero-side recede styles — in one call on HMR. Below lg / reduced-motion
+  // the branch never runs: static white card.
   useLayoutEffect(() => {
     const section = sectionRef.current;
     const card = cardRef.current;
     const surface = surfaceRef.current;
-    const textBlock = textBlockRef.current;
     const floatsFrame = floatsFrameRef.current;
-    if (!section || !card || !surface || !textBlock || !floatsFrame) return;
+    if (!section || !card || !surface || !floatsFrame) return;
 
     const ctx = gsap.context(() => {
       const mm = gsap.matchMedia();
@@ -254,7 +250,7 @@ export function ContextSwitching() {
             trigger: card,
             start: "top bottom",
             end: "center center",
-            scrub: true,
+            scrub: 1,
             invalidateOnRefresh: true,
             onRefresh: setRecedeOrigin,
           },
@@ -267,8 +263,7 @@ export function ContextSwitching() {
           0,
         )
           .fromTo(surface, { borderRadius: 28 }, { borderRadius: 0 }, 0)
-          .fromTo(floatsFrame, { width: frameBase }, { width: frameEnd }, 0)
-          .fromTo([textBlock, floatsFrame], { y: 48 }, { y: 0 }, 0);
+          .fromTo(floatsFrame, { width: frameBase }, { width: frameEnd }, 0);
         if (heroRecede) {
           tl.to(heroRecede, { scale: 0.94, autoAlpha: 0 }, 0);
         }
@@ -339,52 +334,23 @@ export function ContextSwitching() {
       {/* Bounding card — encloses the copy + floating distraction cards.
           Default max-w is 1280 (resting / reduced-motion / below-lg); on lg
           the cover timeline drives it from the mockup's exact width to full
-          viewport bleed while the white surface below dissolves. */}
+          viewport bleed. Nearly viewport-tall on lg (min-h) with the copy
+          centered vertically, so at its centered moment it fills almost the
+          whole screen. The id anchors the Hero pin's endTrigger. */}
       <div
         ref={cardRef}
-        className="relative mx-auto w-full max-w-[1280px] overflow-hidden px-6 py-16 md:px-12 lg:px-20 lg:py-24"
+        id="context-cover-card"
+        className="relative mx-auto flex w-full max-w-[1280px] flex-col justify-center overflow-hidden px-6 py-16 md:px-12 lg:min-h-[90vh] lg:px-20 lg:py-24"
       >
-        {/* Card surface — dark ink skin with brand aurora glows and a faint
-            light dot grid, on its own layer so the cover timeline can animate
-            just its corner radius. Fully opaque the whole ride: the cover
-            reads through motion + dark-on-light contrast, not dissolution.
-            overflow-hidden clips the blurred glows at the rounded corners. */}
+        {/* Card surface — clean white skin with a subtle violet-tinted border
+            and the deep brand shadow, on its own layer so the cover timeline
+            can animate just its corner radius. Fully opaque the whole ride:
+            the cover reads through motion and the crisp edge, not effects. */}
         <div
           ref={surfaceRef}
           aria-hidden
-          className="pointer-events-none absolute inset-0 overflow-hidden rounded-[28px] border border-white/10 bg-[#0a0a0e] shadow-[0_24px_60px_-20px_rgba(15,12,40,0.4),0_12px_32px_-12px_rgba(110,86,207,0.3)]"
-        >
-          {/* Aurora — soft brand-violet + teal orbs, same palette as the
-              section's light-mode glows. */}
-          <div
-            className="absolute -left-[15%] -top-[20%] h-[520px] w-[520px] rounded-full"
-            style={{
-              background:
-                "radial-gradient(circle at 50% 50%, rgba(110,86,207,0.35) 0%, rgba(110,86,207,0.12) 45%, transparent 70%)",
-              filter: "blur(100px)",
-            }}
-          />
-          <div
-            className="absolute -bottom-[25%] -right-[12%] h-[560px] w-[560px] rounded-full"
-            style={{
-              background:
-                "radial-gradient(circle at 50% 50%, rgba(135,212,196,0.16) 0%, rgba(135,212,196,0.06) 45%, transparent 70%)",
-              filter: "blur(100px)",
-            }}
-          />
-          {/* Faint light dot grid — the inverse of the hero's dotted field,
-              centre-masked so it dissolves toward the card edges. */}
-          <div
-            className="absolute inset-0"
-            style={{
-              backgroundImage:
-                "radial-gradient(circle, rgba(255,255,255,0.07) 1px, transparent 1px)",
-              backgroundSize: "32px 32px",
-              maskImage: "radial-gradient(circle at center, black 0%, transparent 75%)",
-              WebkitMaskImage: "radial-gradient(circle at center, black 0%, transparent 75%)",
-            }}
-          />
-        </div>
+          className="pointer-events-none absolute inset-0 rounded-[28px] border border-[#6E56CF]/15 bg-white shadow-[0_1px_2px_rgba(16,24,40,0.04),0_12px_32px_-8px_rgba(16,24,40,0.10),0_40px_80px_-24px_rgba(110,86,207,0.20)]"
+        />
 
         {/* Floats frame — a centered anchor the floating cards position
             against. Its base width hugs the text column (capped at 1100px)
@@ -413,23 +379,19 @@ export function ContextSwitching() {
           </motion.div>
         </div>
 
-        {/* Center content — light copy on the dark surface. Lags slightly
-            behind the card during the cover (inner parallax, see timeline). */}
-        <div
-          ref={textBlockRef}
-          className="relative z-10 mx-auto flex max-w-[760px] flex-col items-center gap-6 text-center lg:max-w-[600px] xl:max-w-[820px]"
-        >
+        {/* Center content — dark copy on the white surface. */}
+        <div className="relative z-10 mx-auto flex max-w-[760px] flex-col items-center gap-6 text-center lg:max-w-[600px] xl:max-w-[820px]">
           <SplitText
             as="h2"
             text="Context switching is costing your team 20% of their capacity."
-            className="text-balance text-[34px] font-bold leading-[1.05] tracking-[-0.035em] text-[#fafafa] sm:text-[44px] md:text-[52px] xl:text-[64px]"
+            className="text-balance text-[34px] font-bold leading-[1.05] tracking-[-0.035em] text-[#1d1d23] sm:text-[44px] md:text-[52px] xl:text-[64px]"
           />
 
           <SplitText
             as="p"
             text="Every time a developer is interrupted by a ping, it takes 23 minutes to recover. FocusFlow auto-mutes your team's biggest distractions so you can actually get work done."
             reveal
-            className="max-w-[640px] text-[15px] font-light leading-relaxed tracking-[-0.01em] text-[#b8b8c6] sm:text-[16px] lg:max-w-[480px] xl:max-w-[640px]"
+            className="max-w-[640px] text-[15px] font-light leading-relaxed tracking-[-0.01em] text-[#6b7280] sm:text-[16px] lg:max-w-[480px] xl:max-w-[640px]"
           />
         </div>
 
