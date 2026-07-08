@@ -248,16 +248,21 @@ export function Header() {
                 );
               })}
               {/* Primary CTA — on phones the header button is hidden, so the
-                  overlay must carry the conversion action. */}
-              <motion.a
-                href="/signup"
-                variants={itemVariants}
-                onClick={() => setOpen(false)}
-                className={cn(CTA_PRIMARY, "mt-4 px-8 py-3 text-lg")}
-              >
-                <GlareHover className="rounded-[12px]" />
-                <span className="relative">Start free trial</span>
-              </motion.a>
+                  overlay must carry the conversion action. The stagger variants
+                  live on a wrapper: CTA_PRIMARY has a CSS transform transition
+                  (hover/active scale) that fights framer's per-frame y-writes
+                  when both target the same element — the fight showed as the
+                  button "jumping" into place at the end of the entrance. */}
+              <motion.div variants={itemVariants} className="mt-4">
+                <a
+                  href="/signup"
+                  onClick={() => setOpen(false)}
+                  className={cn(CTA_PRIMARY, "px-8 py-3 text-lg")}
+                >
+                  <GlareHover className="rounded-[12px]" />
+                  <span className="relative">Start free trial</span>
+                </a>
+              </motion.div>
             </motion.nav>
           </motion.div>,
           document.body,

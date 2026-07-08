@@ -318,14 +318,16 @@ function MobileCarousel() {
   }, [emblaApi]);
 
   return (
-    <div className="xl:hidden">
+    // Full-bleed on phones (cancels the section's px-6) so the feature cards
+    // get the widest possible stage; back inside the padding from sm up.
+    <div className="-mx-6 sm:mx-0 xl:hidden">
       {/* Interior padding gives the cards' soft drop-shadow room to render before
           embla's required overflow-hidden clips the viewport — without it the
           shadow is sliced square at the bottom/side edges. */}
       <div className="overflow-hidden px-3 pb-14 pt-4" ref={emblaRef}>
         <div className="flex touch-pan-y">
           {FEATURES.map((f, i) => (
-            <div key={f.title} className="min-w-0 flex-[0_0_88%] px-2">
+            <div key={f.title} className="min-w-0 flex-[0_0_92%] px-2 sm:flex-[0_0_88%]">
               <div className="flex h-full flex-col">
                 <div className="mb-6 space-y-3.5 px-1">
                   {/* Minimal numeric index */}
@@ -344,10 +346,11 @@ function MobileCarousel() {
                     {f.description}
                   </p>
                 </div>
+                {/* Portrait on phones — the mockups reflow (see .mockup-inner in
+                    styles.css) and need the vertical room; desktop ratio from sm. */}
                 <div
-                  className={`relative mt-auto overflow-hidden rounded-2xl border bg-[#0a0a0e] ${i === selected ? "border-[#6E56CF]" : "border-[#AA99EC]"}`}
+                  className={`relative mt-auto aspect-[3/4] overflow-hidden rounded-2xl border bg-[#0a0a0e] sm:aspect-[640/457] ${i === selected ? "border-[#6E56CF]" : "border-[#AA99EC]"}`}
                   style={{
-                    aspectRatio: "640 / 457",
                     boxShadow:
                       "0 30px 70px -32px rgba(31, 29, 66, 0.45), 0 12px 32px -20px rgba(110, 86, 207, 0.22)",
                   }}

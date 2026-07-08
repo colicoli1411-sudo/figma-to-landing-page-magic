@@ -133,6 +133,14 @@ const snippetVariants: Variants = {
 export function ContextSwitching() {
   const sectionRef = useRef<HTMLElement | null>(null);
   const cardRef = useRef<HTMLDivElement | null>(null);
+  // The card's dark "skin" (ink bg + aurora glows + light dot grid). Stays
+  // fully opaque through the cover; only its corner radius animates.
+  const surfaceRef = useRef<HTMLDivElement | null>(null);
+  // Center copy block — lags slightly behind the card while it rises (depth).
+  const textBlockRef = useRef<HTMLDivElement | null>(null);
+  // Centered frame the floating cards anchor to — hugs the text column and
+  // widens only marginally while the card expands to full bleed around it.
+  const floatsFrameRef = useRef<HTMLDivElement | null>(null);
   // once: false so the chaos loop can pause off-screen and resume on re-entry;
   // fire early (amount 0.05) so fast scrolling doesn't outrun the entrance.
   const inView = useInView(sectionRef, { once: false, amount: 0.05 });
@@ -180,22 +188,30 @@ export function ContextSwitching() {
     };
   }, [inView, cardControls]);
 
-  // Scroll-driven width expand (lg+, motion allowed only): as the white card
-  // rises up over the pinned hero, it widens from EXACTLY the mockup's final
-  // rendered width (shared math — lib/mockup-scale.ts) up to 1280px, so the
-  // card emerges matching the frozen mockup and grows past it. The range is
-  // geometrically locked to the hero's cover pin WITHOUT any cross-component
-  // wiring: this section starts exactly at the hero's bottom edge, so "section
-  // top hits viewport bottom" is the same scroll position as the pin's start
-  // ("hero bottom hits viewport bottom"). useLayoutEffect + fromTo
-  // (immediateRender) applies the from-state before first paint so there's no
-  // width flash. Scoped via gsap.context so one revert() cleans up on HMR.
-  // Below lg / reduced-motion the branch never runs, so the CSS default
-  // max-w-[1280px] stands (static, full-width card).
+  // The cover choreography (lg+, motion allowed only) — ONE scrubbed timeline
+  // spanning from "card enters at the viewport bottom" to "card centered in
+  // the viewport", so every strand stays in perfect sync:
+  //   1. Card width: the mockup's exact final width (shared math —
+  //      lib/mockup-scale.ts) → full viewport bleed. The dark surface stays
+  //      fully opaque — the cover reads through motion + contrast.
+  //   2. Surface corners: 28px → 0 as the card reaches full bleed.
+  //   3. Floats frame: hugs the text column (capped base width) and widens at
+  //      only ~10% of the leftover space — the floats barely drift.
+  //   4. Inner parallax: the copy + floats start slightly low inside the card
+  //      and settle to 0 — the content lags a touch behind the card (depth).
+  //   5. Hero recede ([data-hero-recede], inside the pinned hero): scales
+  //      down + fades out, revealing the dot field that stays behind.
+  // useLayoutEffect + fromTo (immediateRender) applies all from-states before
+  // first paint (no flash); gsap.context scoped to the section reverts
+  // everything — including the hero-side recede styles — in one call on HMR.
+  // Below lg / reduced-motion the branch never runs: static dark card.
   useLayoutEffect(() => {
     const section = sectionRef.current;
     const card = cardRef.current;
-    if (!section || !card) return;
+    const surface = surfaceRef.current;
+    const textBlock = textBlockRef.current;
+    const floatsFrame = floatsFrameRef.current;
+    if (!section || !card || !surface || !textBlock || !floatsFrame) return;
 
     const ctx = gsap.context(() => {
       const mm = gsap.matchMedia();
@@ -206,24 +222,60 @@ export function ContextSwitching() {
           const scaleEl = document.querySelector<HTMLElement>(".hero-preview .origin-top");
           return scaleEl ? computeMockupFinalWidth(scaleEl) : 960;
         };
-        const tween = gsap.fromTo(
+        // Floats hug the text column: base width capped at 1100px (on wide
+        // screens the mockup itself is far wider — anchoring to it would
+        // scatter the floats), then a mere 10% of the leftover space as
+        // drift while the card grows to full bleed.
+        const frameBase = () => Math.min(mockupWidth(), 1100);
+        const frameEnd = () => {
+          const b = frameBase();
+          return b + 0.1 * Math.max(0, window.innerWidth - b);
+        };
+
+        const heroSection = document.querySelector<HTMLElement>(
+          'section[data-edit-section="Hero"]',
+        );
+        const heroRecede = document.querySelector<HTMLElement>("[data-hero-recede]");
+        // Scale the receding hero around the point sitting at the viewport's
+        // centre while it's pinned (the hero is taller than the viewport, so
+        // keyword origins would drift). Recomputed on every refresh.
+        const setRecedeOrigin = () => {
+          if (heroSection && heroRecede) {
+            gsap.set(heroRecede, {
+              transformOrigin: `50% ${heroSection.offsetHeight - window.innerHeight / 2}px`,
+            });
+          }
+        };
+        setRecedeOrigin();
+
+        const tl = gsap.timeline({
+          defaults: { ease: "none", duration: 1 },
+          scrollTrigger: {
+            trigger: card,
+            start: "top bottom",
+            end: "center center",
+            scrub: true,
+            invalidateOnRefresh: true,
+            onRefresh: setRecedeOrigin,
+          },
+        });
+
+        tl.fromTo(
           card,
           { maxWidth: mockupWidth },
-          {
-            maxWidth: 1280,
-            ease: "none",
-            scrollTrigger: {
-              trigger: section,
-              start: "top bottom",
-              end: "top top",
-              scrub: true,
-              invalidateOnRefresh: true,
-            },
-          },
-        );
+          { maxWidth: () => window.innerWidth },
+          0,
+        )
+          .fromTo(surface, { borderRadius: 28 }, { borderRadius: 0 }, 0)
+          .fromTo(floatsFrame, { width: frameBase }, { width: frameEnd }, 0)
+          .fromTo([textBlock, floatsFrame], { y: 48 }, { y: 0 }, 0);
+        if (heroRecede) {
+          tl.to(heroRecede, { scale: 0.94, autoAlpha: 0 }, 0);
+        }
+
         return () => {
-          tween.scrollTrigger?.kill();
-          tween.kill();
+          tl.scrollTrigger?.kill();
+          tl.kill();
         };
       });
     }, sectionRef);
@@ -235,7 +287,7 @@ export function ContextSwitching() {
     <section
       ref={sectionRef}
       id="context-switching"
-      className="relative w-full overflow-hidden bg-[#F8F9FB] px-4 py-24 sm:px-6 md:py-32 lg:z-20 lg:bg-transparent lg:px-8"
+      className="relative w-full overflow-hidden bg-[#F8F9FB] px-4 py-24 sm:px-6 md:py-32 lg:z-20 lg:bg-transparent lg:px-0"
       data-edit-section="Context switching"
     >
       {/* Depth — masked tech dot-grid. Hidden on lg: the section is transparent
@@ -284,39 +336,100 @@ export function ContextSwitching() {
         />
       </div>
 
-      {/* White bounding card — encloses the copy + floating distraction cards.
-          Default max-w is 1280 (resting / reduced-motion / below-lg); on lg the
-          GSAP scrub drives it 960 → 1280 as the card rises over the frozen
-          mockup. overflow-hidden keeps the floats within the rounded bounds. */}
+      {/* Bounding card — encloses the copy + floating distraction cards.
+          Default max-w is 1280 (resting / reduced-motion / below-lg); on lg
+          the cover timeline drives it from the mockup's exact width to full
+          viewport bleed while the white surface below dissolves. */}
       <div
         ref={cardRef}
-        className="relative mx-auto w-full max-w-[1280px] overflow-hidden rounded-[28px] border border-black/5 bg-white px-6 py-16 shadow-[0_1px_2px_rgba(16,24,40,0.04),0_12px_32px_-8px_rgba(16,24,40,0.10),0_40px_80px_-24px_rgba(110,86,207,0.20)] md:px-12 lg:px-20 lg:py-24"
+        className="relative mx-auto w-full max-w-[1280px] overflow-hidden px-6 py-16 md:px-12 lg:px-20 lg:py-24"
       >
-        {/* Floating distraction pop-ups — desktop spread. */}
-        <motion.div
-          className="pointer-events-none absolute inset-0 z-[2] hidden lg:block"
-          initial="hidden"
-          animate={cardControls}
-          variants={layerVariants}
+        {/* Card surface — dark ink skin with brand aurora glows and a faint
+            light dot grid, on its own layer so the cover timeline can animate
+            just its corner radius. Fully opaque the whole ride: the cover
+            reads through motion + dark-on-light contrast, not dissolution.
+            overflow-hidden clips the blurred glows at the rounded corners. */}
+        <div
+          ref={surfaceRef}
+          aria-hidden
+          className="pointer-events-none absolute inset-0 overflow-hidden rounded-[28px] border border-white/10 bg-[#0a0a0e] shadow-[0_24px_60px_-20px_rgba(15,12,40,0.4),0_12px_32px_-12px_rgba(110,86,207,0.3)]"
         >
-          {APPS.map((app, i) => (
-            <FloatingCard key={app.id} app={app} index={i} className={`absolute ${app.position}`} />
-          ))}
-        </motion.div>
+          {/* Aurora — soft brand-violet + teal orbs, same palette as the
+              section's light-mode glows. */}
+          <div
+            className="absolute -left-[15%] -top-[20%] h-[520px] w-[520px] rounded-full"
+            style={{
+              background:
+                "radial-gradient(circle at 50% 50%, rgba(110,86,207,0.35) 0%, rgba(110,86,207,0.12) 45%, transparent 70%)",
+              filter: "blur(100px)",
+            }}
+          />
+          <div
+            className="absolute -bottom-[25%] -right-[12%] h-[560px] w-[560px] rounded-full"
+            style={{
+              background:
+                "radial-gradient(circle at 50% 50%, rgba(135,212,196,0.16) 0%, rgba(135,212,196,0.06) 45%, transparent 70%)",
+              filter: "blur(100px)",
+            }}
+          />
+          {/* Faint light dot grid — the inverse of the hero's dotted field,
+              centre-masked so it dissolves toward the card edges. */}
+          <div
+            className="absolute inset-0"
+            style={{
+              backgroundImage:
+                "radial-gradient(circle, rgba(255,255,255,0.07) 1px, transparent 1px)",
+              backgroundSize: "32px 32px",
+              maskImage: "radial-gradient(circle at center, black 0%, transparent 75%)",
+              WebkitMaskImage: "radial-gradient(circle at center, black 0%, transparent 75%)",
+            }}
+          />
+        </div>
 
-        {/* Center content — sits naturally on the section background, no bounding box. */}
-        <div className="relative z-10 mx-auto flex max-w-[760px] flex-col items-center gap-6 text-center lg:max-w-[600px] xl:max-w-[820px]">
+        {/* Floats frame — a centered anchor the floating cards position
+            against. Its base width hugs the text column (capped at 1100px)
+            and the cover timeline widens it by only ~10% of the leftover
+            space, so the floats stay an intimate cluster around the headline
+            while the card grows to full bleed around them. */}
+        <div
+          ref={floatsFrameRef}
+          className="pointer-events-none absolute left-1/2 top-0 z-[2] hidden h-full w-full -translate-x-1/2 lg:block"
+        >
+          {/* Floating distraction pop-ups — desktop spread. */}
+          <motion.div
+            className="pointer-events-none absolute inset-0"
+            initial="hidden"
+            animate={cardControls}
+            variants={layerVariants}
+          >
+            {APPS.map((app, i) => (
+              <FloatingCard
+                key={app.id}
+                app={app}
+                index={i}
+                className={`absolute ${app.position}`}
+              />
+            ))}
+          </motion.div>
+        </div>
+
+        {/* Center content — light copy on the dark surface. Lags slightly
+            behind the card during the cover (inner parallax, see timeline). */}
+        <div
+          ref={textBlockRef}
+          className="relative z-10 mx-auto flex max-w-[760px] flex-col items-center gap-6 text-center lg:max-w-[600px] xl:max-w-[820px]"
+        >
           <SplitText
             as="h2"
             text="Context switching is costing your team 20% of their capacity."
-            className="text-balance text-[34px] font-bold leading-[1.05] tracking-[-0.035em] text-[#1d1d23] sm:text-[44px] md:text-[52px] xl:text-[64px]"
+            className="text-balance text-[34px] font-bold leading-[1.05] tracking-[-0.035em] text-[#fafafa] sm:text-[44px] md:text-[52px] xl:text-[64px]"
           />
 
           <SplitText
             as="p"
             text="Every time a developer is interrupted by a ping, it takes 23 minutes to recover. FocusFlow auto-mutes your team's biggest distractions so you can actually get work done."
             reveal
-            className="max-w-[640px] text-[15px] font-light leading-relaxed tracking-[-0.01em] text-[#6b7280] sm:text-[16px] lg:max-w-[480px] xl:max-w-[640px]"
+            className="max-w-[640px] text-[15px] font-light leading-relaxed tracking-[-0.01em] text-[#b8b8c6] sm:text-[16px] lg:max-w-[480px] xl:max-w-[640px]"
           />
         </div>
 

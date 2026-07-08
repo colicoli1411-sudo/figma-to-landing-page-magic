@@ -389,3 +389,51 @@
   backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
 }
+
+/* ── Feature mockups: narrow-card readability ─────────────────────────────
+   The mockups size everything in cqw against the card width, which reads
+   perfectly on the 640px desktop stack but becomes microscopic in the phone
+   carousel. `--ms` is a type/glyph multiplier the mockups bake into their
+   cqw sizes (calc(Xcqw * var(--ms))): 1 on desktop (bit-identical), stepped
+   up as the card narrows. The grid/panel rules reflow dense desktop layouts
+   (3-col app grid, side-by-side charts, 58% panel) to fit the larger type.
+   Queries resolve against each mockup root's container-type:inline-size. */
+.mockup-inner {
+  --ms: 1;
+}
+.mockup-grid-apps {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+.mockup-grid-charts {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+.mockup-vis-panel {
+  width: 58%;
+}
+@container (max-width: 560px) {
+  .mockup-inner {
+    --ms: 1.35;
+  }
+}
+@container (max-width: 460px) {
+  .mockup-inner {
+    --ms: 2.1;
+  }
+  .mockup-grid-apps {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .mockup-grid-charts {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: 1fr 1fr;
+  }
+  .mockup-vis-panel {
+    width: 76%;
+  }
+}
+@container (max-width: 379px) {
+  .mockup-inner {
+    --ms: 2.35;
+  }
+}

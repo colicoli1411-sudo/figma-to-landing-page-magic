@@ -51,53 +51,80 @@ export function Footer() {
       <div className="pointer-events-none absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-white/5 to-transparent" />
 
       <div className="relative mx-auto max-w-7xl px-6 pt-24 pb-10 lg:px-10 lg:pt-32">
-        {/* MEGA CTA — TextPressure */}
-        <div className="border-b border-white/10 pb-20">
-          <div
-            className="relative w-full max-w-5xl mx-auto h-[150px] md:h-[200px] flex items-center justify-start overflow-hidden"
-            style={{
-              WebkitMaskImage:
-                "linear-gradient(to right, transparent 0%, black 7%, black 93%, transparent 100%), linear-gradient(to bottom, transparent 0%, black 14%, black 86%, transparent 100%)",
-              maskImage:
-                "linear-gradient(to right, transparent 0%, black 7%, black 93%, transparent 100%), linear-gradient(to bottom, transparent 0%, black 14%, black 86%, transparent 100%)",
-              WebkitMaskComposite: "source-in",
-              maskComposite: "intersect",
-            }}
-          >
-            <TextPressure
-              text="FocusFlow"
-              fontFamily="Roboto Flex"
-              fontUrl="https://fonts.googleapis.com/css2?family=Roboto+Flex:opsz,wdth,wght@8..144,25..151,100..1000&display=swap"
-              flex={false}
-              alpha={false}
-              stroke={false}
-              width={true}
-              weight={true}
-              italic={false}
-              textColor="#ffffff"
-              minFontSize={64}
-              scrollDrive
-            />
+        {/* TOP BLOCK — mobile/tablet: a slim single row, logo one side / CTA the
+            other; desktop (lg+): the interactive TextPressure mega-CTA, unchanged. */}
+        <div className="border-b border-white/10 pb-10 lg:pb-20">
+          {/* Mobile/tablet — one thin, balanced row: mark left, a short
+              marketing line stacked right above the action on the right. */}
+          <div className="flex items-center justify-between gap-4 lg:hidden">
+            <Logo size={30} focusColor="#ffffff" flowColor="#D7CFF9" />
+            <div className="flex flex-col items-end gap-2">
+              <p className="text-[13px] font-medium tracking-tight text-white/55">
+                Ready to reclaim focus?
+              </p>
+              <a
+                href="/signup"
+                className={cn(
+                  CTA_SECONDARY_DARK,
+                  "shrink-0 gap-2 px-5 py-2.5 text-sm focus-visible:ring-offset-[#0A0A0F]",
+                )}
+              >
+                Start free trial
+                <ArrowRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-0.5" />
+              </a>
+            </div>
           </div>
-          <div className="mt-10 flex flex-col items-start justify-between gap-6 sm:flex-row sm:items-center">
-            <p className="max-w-md text-base text-white/70">Quiet the noise. Ship the work.</p>
-            <a
-              href="/signup"
-              className={cn(
-                CTA_SECONDARY_DARK,
-                "gap-3 px-6 py-3.5 text-[15px] focus-visible:ring-offset-[#0A0A0F]",
-              )}
+
+          {/* Desktop mega CTA — TextPressure (unchanged) */}
+          <div className="hidden lg:block">
+            <div
+              className="relative w-full max-w-5xl mx-auto h-[200px] flex items-center justify-start overflow-hidden"
+              style={{
+                WebkitMaskImage:
+                  "linear-gradient(to right, transparent 0%, black 7%, black 93%, transparent 100%), linear-gradient(to bottom, transparent 0%, black 14%, black 86%, transparent 100%)",
+                maskImage:
+                  "linear-gradient(to right, transparent 0%, black 7%, black 93%, transparent 100%), linear-gradient(to bottom, transparent 0%, black 14%, black 86%, transparent 100%)",
+                WebkitMaskComposite: "source-in",
+                maskComposite: "intersect",
+              }}
             >
-              Start free trial
-              <ArrowRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-0.5" />
-            </a>
+              <TextPressure
+                text="FocusFlow"
+                fontFamily="Roboto Flex"
+                fontUrl="https://fonts.googleapis.com/css2?family=Roboto+Flex:opsz,wdth,wght@8..144,25..151,100..1000&display=swap"
+                flex={false}
+                alpha={false}
+                stroke={false}
+                width={true}
+                weight={true}
+                italic={false}
+                textColor="#ffffff"
+                minFontSize={64}
+                scrollDrive
+              />
+            </div>
+            <div className="mt-10 flex flex-row items-center justify-between gap-6">
+              <p className="max-w-md text-base text-white/70">Quiet the noise. Ship the work.</p>
+              <a
+                href="/signup"
+                className={cn(
+                  CTA_SECONDARY_DARK,
+                  "gap-3 px-6 py-3.5 text-[15px] focus-visible:ring-offset-[#0A0A0F]",
+                )}
+              >
+                Start free trial
+                <ArrowRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-0.5" />
+              </a>
+            </div>
           </div>
         </div>
 
-        {/* EDITORIAL NAV ROW — brand + horizontal inline product nav */}
-        <div className="flex flex-col gap-10 py-12 lg:flex-row lg:items-center lg:justify-between lg:gap-16">
-          {/* Brand block */}
-          <div className="max-w-sm">
+        {/* EDITORIAL NAV ROW — brand + horizontal inline product nav.
+            On mobile/tablet the brand block is hidden (the logo already leads
+            the footer) and the nav centers — one quiet row of links. */}
+        <div className="flex flex-col gap-10 py-10 lg:flex-row lg:items-center lg:justify-between lg:gap-16 lg:py-12">
+          {/* Brand block — desktop only */}
+          <div className="hidden max-w-sm lg:block">
             <Link to="/" className="inline-flex items-center" aria-label="FocusFlow home">
               <Logo size={30} focusColor="#ffffff" flowColor="#D7CFF9" />
             </Link>
@@ -108,7 +135,7 @@ export function Footer() {
           </div>
 
           {/* Product nav — horizontal inline list */}
-          <nav className="flex flex-wrap items-center gap-x-9 gap-y-3 lg:justify-end">
+          <nav className="flex flex-wrap items-center justify-center gap-x-9 gap-y-4 lg:justify-end">
             {productLinks.map((link) => (
               <a
                 key={link.label}

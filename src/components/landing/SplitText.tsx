@@ -139,7 +139,16 @@ export function SplitText({
             // target on refresh, animating 0→0 and leaving content stuck hidden.
             once: true,
           },
-          onComplete,
+          onComplete: () => {
+            // Drop the leftover inline transform/opacity once the reveal is
+            // done. GSAP leaves `transform: translate(0,0)` behind, which
+            // silently turns every revealed wrapper into a containing block +
+            // rasterized layer — position:fixed descendants break, and any
+            // layout animation inside (e.g. the FAQ accordion) repaints the
+            // whole layer per frame on mobile.
+            gsap.set(el, { clearProps: "transform,opacity" });
+            onComplete?.();
+          },
         });
       }, el);
       return () => ctx.revert();

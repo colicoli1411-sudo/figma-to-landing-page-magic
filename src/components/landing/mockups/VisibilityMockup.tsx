@@ -133,9 +133,11 @@ export function VisibilityMockup() {
         }}
       />
 
-      {/* ---------- Sharp, authentic Team Flow panel ---------- */}
+      {/* ---------- Sharp, authentic Team Flow panel ----------
+          .mockup-inner supplies --ms (type multiplier for narrow cards) and
+          .mockup-vis-panel widens the panel there — see styles.css. */}
       <div
-        className="absolute right-[3.5%] top-1/2 w-[58%] -translate-y-1/2 rounded-[2.4cqw] border border-[#e5e7eb] bg-white p-[2.4cqw] ring-1 ring-violet-100"
+        className="mockup-inner mockup-vis-panel absolute right-[3.5%] top-1/2 -translate-y-1/2 rounded-[2.4cqw] border border-[#e5e7eb] bg-white p-[2.4cqw] ring-1 ring-violet-100"
         style={{
           boxShadow:
             "0 22px 48px -18px rgba(31,29,66,0.45), 0 10px 24px -16px rgba(110,86,207,0.32)",
@@ -143,10 +145,10 @@ export function VisibilityMockup() {
       >
         {/* Header */}
         <div className="flex items-center gap-[1.6cqw]">
-          <div className="flex h-[4.4cqw] w-[4.4cqw] items-center justify-center rounded-[1.5cqw] bg-[rgba(110,86,207,0.2)]">
-            <Users className="h-[2.5cqw] w-[2.5cqw] text-[#6E56CF]" />
+          <div className="flex h-[calc(4.4cqw*var(--ms))] w-[calc(4.4cqw*var(--ms))] items-center justify-center rounded-[1.5cqw] bg-[rgba(110,86,207,0.2)]">
+            <Users className="h-[calc(2.5cqw*var(--ms))] w-[calc(2.5cqw*var(--ms))] text-[#6E56CF]" />
           </div>
-          <h3 className="text-[2.2cqw] font-semibold leading-none text-[#111827]">
+          <h3 className="text-[calc(2.2cqw*var(--ms))] font-semibold leading-none text-[#111827]">
             Team Flow
           </h3>
         </div>
@@ -168,11 +170,11 @@ export function VisibilityMockup() {
                 <img
                   src={m.avatar}
                   alt={m.name}
-                  className="h-[4cqw] w-[4cqw] shrink-0 rounded-full border border-[rgba(110,86,207,0.4)] object-cover"
+                  className="h-[calc(4cqw*var(--ms))] w-[calc(4cqw*var(--ms))] shrink-0 rounded-full border border-[rgba(110,86,207,0.4)] object-cover"
                 />
                 <div className="flex min-w-0 flex-1 flex-col gap-[0.5cqw]">
                   <span
-                    className={`truncate text-[1.75cqw] leading-none text-[#4b5563] ${
+                    className={`truncate text-[calc(1.75cqw*var(--ms))] leading-none text-[#4b5563] ${
                       isYou ? "font-bold" : ""
                     }`}
                   >
@@ -184,7 +186,7 @@ export function VisibilityMockup() {
                     <AnimatePresence mode="wait" initial={false}>
                       <motion.span
                         key={status}
-                        className="inline-flex w-fit items-center rounded-[1.6cqw] px-[1cqw] py-[0.45cqw] text-[1.4cqw] leading-none"
+                        className="inline-flex w-fit items-center rounded-[1.6cqw] px-[calc(1cqw*var(--ms))] py-[calc(0.45cqw*var(--ms))] text-[calc(1.4cqw*var(--ms))] leading-none"
                         style={{ background: s.bg, color: s.color, boxShadow: s.glow }}
                         initial={{ opacity: 0, y: 3, scale: 0.85 }}
                         animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -202,7 +204,7 @@ export function VisibilityMockup() {
         </ul>
 
         {/* Footer */}
-        <div className="mt-[1.8cqw] flex items-center justify-between border-t border-[#e5e7eb] pt-[1.6cqw] text-[1.7cqw]">
+        <div className="mt-[1.8cqw] flex items-center justify-between border-t border-[#e5e7eb] pt-[1.6cqw] text-[calc(1.7cqw*var(--ms))]">
           <span className="text-[#737373]">In deep work</span>
           <span className="font-semibold italic text-[#0b0b0b]">2/5 members</span>
         </div>

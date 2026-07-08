@@ -124,6 +124,15 @@ function RootShell({ children }: { children: ReactNode }) {
   return (
     <html lang="en">
       <head>
+        {/* Runs before the browser applies its own scroll restoration, so a
+            refresh always lands at the top instead of wherever the user had
+            scrolled to. */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html:
+              "if ('scrollRestoration' in history) { history.scrollRestoration = 'manual'; } window.scrollTo(0, 0);",
+          }}
+        />
         <HeadContent />
       </head>
       <body>

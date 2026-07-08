@@ -19,9 +19,6 @@ export function Hero() {
   // whole unit (dashboard + floating cards) up to full viewport width.
   const heroRef = useRef<HTMLElement>(null);
   const mockupScaleRef = useRef<HTMLDivElement>(null);
-  // Wraps ALL hero visuals (dot field, glow, copy, mockup). The pin's scrubbed
-  // timeline recedes this wrapper while the next section's card covers it.
-  const recedeRef = useRef<HTMLDivElement>(null);
   // Mirrors Sarah Chen's status from the mockup's Team Flow so her floating pill
   // starts "Available" and flips to "In Deep Work" in sync with the demo.
   const [sarahStatus, setSarahStatus] = useState<Status>("available");
@@ -140,71 +137,39 @@ export function Hero() {
     return () => mm.revert();
   }, []);
 
-  // Cover effect: when the hero's bottom reaches the viewport bottom (the user
+  // Cover pin: when the hero's bottom reaches the viewport bottom (the user
   // hits the end of the mockup), the ENTIRE hero — background included — pins
-  // in place with no spacer, so the next section scrolls up OVER it. Early in
-  // the cover (by the time the card reaches mid-screen) the recede wrapper —
-  // glow + copy + mockup — scales down and fades out entirely, leaving only
-  // the dotted backdrop behind the rising card. The pin holds until the whole
-  // context section has scrolled past (endTrigger), so the dots stay frozen
-  // behind the card for the entire ride and the unpin happens only once the
-  // opaque Features section covers the viewport — invisible. Scoped via
-  // gsap.context so a single revert() tears down the pin cleanly on
-  // HMR/remount (same pattern as the Features pin).
+  // in place with no spacer, so the next section scrolls up OVER it. The pin
+  // holds until the whole context section has scrolled past (endTrigger), so
+  // the dotted backdrop stays frozen behind the rising card the entire ride
+  // and the unpin happens only once the opaque Features section covers the
+  // viewport — invisible. Pure pin, no timeline: the cover choreography (this
+  // hero's recede included — see [data-hero-recede] on the wrapper below) is
+  // driven by ONE synced timeline in ContextSwitching. Scoped via gsap.context
+  // so a single revert() tears down the pin cleanly on HMR/remount (same
+  // pattern as the Features pin).
   useEffect(() => {
     const hero = heroRef.current;
-    const wrap = recedeRef.current;
-    if (!hero || !wrap) return;
+    if (!hero) return;
 
     const ctx = gsap.context(() => {
       const mm = gsap.matchMedia();
 
       mm.add("(min-width: 1024px) and (prefers-reduced-motion: no-preference)", () => {
-        // Scale around the point that sits at the viewport's centre at pin
-        // time. The hero is taller than the viewport, so keyword origins
-        // (center/bottom) would drift; recomputed on every refresh.
-        const setOrigin = () => {
-          gsap.set(wrap, {
-            transformOrigin: `50% ${hero.offsetHeight - window.innerHeight / 2}px`,
-          });
-        };
-        setOrigin();
-
-        const tl = gsap.timeline({
-          defaults: { ease: "none" },
-          scrollTrigger: {
-            trigger: hero,
-            start: "bottom bottom",
-            // Hold the pin until the context section has fully scrolled past —
-            // the dotted backdrop stays frozen behind the card the whole way,
-            // and the unpin lands hidden behind the opaque Features section.
-            endTrigger: "#context-switching",
-            end: "bottom top",
-            pin: true,
-            // No spacer: the following section keeps its document position and
-            // rides up over the pinned hero — the canonical cover pattern.
-            pinSpacing: false,
-            scrub: true,
-            anticipatePin: 1,
-            invalidateOnRefresh: true,
-            onRefresh: setOrigin,
-          },
+        const st = ScrollTrigger.create({
+          trigger: hero,
+          start: "bottom bottom",
+          endTrigger: "#context-switching",
+          end: "bottom top",
+          pin: true,
+          // No spacer: the following section keeps its document position and
+          // rides up over the pinned hero — the canonical cover pattern.
+          pinSpacing: false,
+          anticipatePin: 1,
+          invalidateOnRefresh: true,
         });
 
-        // Recede + vanish early: by ~45% of the cover (card around mid-screen)
-        // the glow/copy/mockup are fully gone; only the dot field remains. The
-        // empty-object tween pads the timeline to duration 1 so the fade maps
-        // to the first ~45% of the scrubbed scroll range.
-        tl.to(wrap, { scale: 0.94, autoAlpha: 0, duration: 0.45 }, 0).to(
-          {},
-          { duration: 0.55 },
-          0.45,
-        );
-
-        return () => {
-          tl.scrollTrigger?.kill();
-          tl.kill();
-        };
+        return () => st.kill();
       });
     }, hero);
 
@@ -252,14 +217,15 @@ export function Hero() {
         />
       </div>
 
-      {/* Recede wrapper — while the hero is pinned and the next section's white
-          card covers it, the scrubbed timeline scales this layer down and fades
-          it out (never the section itself: transforming the pinned element
-          breaks the pin). Holds the glow + all hero content but NOT the dot
-          field, so once faded only the dotted backdrop remains behind the card.
-          Carries the hero's top padding so its box (and the glow inside) spans
-          the full hero. */}
-      <div ref={recedeRef} className="relative w-full pt-28 will-change-transform md:pt-[200px]">
+      {/* Recede wrapper — while the hero is pinned and the next section's card
+          covers it, ContextSwitching's synced cover timeline (which targets
+          [data-hero-recede]) scales this layer down and fades it out (never
+          the section itself: transforming the pinned element breaks the pin).
+          Holds the glow + all hero content but NOT the dot field, so once
+          faded only the dotted backdrop remains behind the card. Carries the
+          hero's top padding so its box (and the glow inside) spans the full
+          hero. */}
+      <div data-hero-recede className="relative w-full pt-28 will-change-transform md:pt-[200px]">
       <PurpleGlow />
 
       <div className="relative z-10 mx-auto flex w-full flex-col items-center gap-[72px] px-6 pt-[10px] md:gap-[120px] md:px-12 lg:px-20 xl:px-32 2xl:px-48">

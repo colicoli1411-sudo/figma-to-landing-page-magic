@@ -101,20 +101,23 @@ export function MuteMockup() {
       className="relative h-full w-full overflow-hidden"
       style={{ background: "#F2ECFE", containerType: "inline-size" }}
     >
-      <div className="absolute inset-0 flex flex-col justify-center px-[4.5cqw] py-[4cqw]">
+      {/* .mockup-inner supplies --ms — a type multiplier that steps up as the
+          card narrows (see styles.css) so the UI stays readable in the phone
+          carousel while staying bit-identical on the 640px desktop stack. */}
+      <div className="mockup-inner absolute inset-0 flex flex-col justify-center px-[4.5cqw] py-[4cqw]">
         {/* Header */}
         <div
           className="rounded-[1.4cqw] border border-[#E5E7EB] bg-white px-[2.2cqw] py-[1.9cqw]"
           style={{ boxShadow: CARD_SHADOW }}
         >
-          <h3 className="text-[2.6cqw] font-bold leading-none text-[#111827]">Integrations</h3>
-          <p className="mt-[1cqw] text-[1.3cqw] leading-snug text-[#6B7280]">
+          <h3 className="text-[calc(2.6cqw*var(--ms))] font-bold leading-none text-[#111827]">Integrations</h3>
+          <p className="mt-[1cqw] text-[calc(1.3cqw*var(--ms))] leading-snug text-[#6B7280]">
             Select which applications are automatically muted during your deep work sessions.
           </p>
         </div>
 
-        {/* App grid */}
-        <div className="mt-[2.6cqw] grid grid-cols-3 items-start gap-[2cqw]">
+        {/* App grid — 3-up on desktop, 2-up in narrow cards (styles.css) */}
+        <div className="mockup-grid-apps mt-[2.6cqw] items-start gap-[2cqw]">
           {APPS.map((app, i) => (
             <AppCard key={app.name} app={app} on={on[i]} />
           ))}
@@ -127,18 +130,26 @@ export function MuteMockup() {
         >
           <div
             className="flex shrink-0 items-center justify-center rounded-[1.2cqw]"
-            style={{ width: "3.3cqw", height: "3.3cqw", background: "rgba(110,86,207,0.1)" }}
+            style={{
+              width: "calc(3.3cqw * var(--ms))",
+              height: "calc(3.3cqw * var(--ms))",
+              background: "rgba(110,86,207,0.1)",
+            }}
           >
-            <svg viewBox="0 0 24 24" fill="none" style={{ width: "1.7cqw", height: "1.7cqw" }}>
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              style={{ width: "calc(1.7cqw * var(--ms))", height: "calc(1.7cqw * var(--ms))" }}
+            >
               <circle cx="12" cy="12" r="9" stroke="#6E56CF" strokeWidth="2" />
               <path d="M12 11v5M12 8h.01" stroke="#6E56CF" strokeWidth="2" strokeLinecap="round" />
             </svg>
           </div>
           <div className="min-w-0">
-            <div className="text-[1.35cqw] font-semibold leading-none text-[#111827]">
+            <div className="text-[calc(1.35cqw*var(--ms))] font-semibold leading-none text-[#111827]">
               How do integrations work?
             </div>
-            <p className="mt-[0.9cqw] text-[1.15cqw] leading-snug text-[#6B7280]">
+            <p className="mt-[0.9cqw] text-[calc(1.15cqw*var(--ms))] leading-snug text-[#6B7280]">
               When you start a Focus Session, FocusFlow automatically mutes notifications from
               enabled apps. Once your session ends, they're restored to their previous state.
             </p>
@@ -161,9 +172,9 @@ function AppCard({ app, on }: { app: App; on: boolean }) {
         <div
           className="flex shrink-0 items-center justify-center rounded-[1.4cqw]"
           style={{
-            width: "4.2cqw",
-            height: "4.2cqw",
-            borderWidth: "0.16cqw",
+            width: "calc(4.2cqw * var(--ms))",
+            height: "calc(4.2cqw * var(--ms))",
+            borderWidth: "max(0.16cqw, 1px)",
             borderStyle: "solid",
             backgroundColor: on ? rgba(color, 0.08) : "#F5F5F5",
             borderColor: on ? rgba(color, 0.19) : "#E5E7EB",
@@ -178,16 +189,18 @@ function AppCard({ app, on }: { app: App; on: boolean }) {
               transition: "filter 0.4s ease, opacity 0.4s ease",
             }}
           >
-            <Icon style={{ width: "2.2cqw", height: "2.2cqw" }} />
+            <Icon
+              style={{ width: "calc(2.2cqw * var(--ms))", height: "calc(2.2cqw * var(--ms))" }}
+            />
           </div>
         </div>
 
         {/* Title + description */}
         <div className="min-w-0 flex-1">
-          <div className="truncate text-[1.45cqw] font-semibold leading-tight text-[#111827]">
+          <div className="truncate text-[calc(1.45cqw*var(--ms))] font-semibold leading-tight text-[#111827]">
             {name}
           </div>
-          <div className="mt-[0.4cqw] truncate text-[1.2cqw] leading-tight text-[#6B7280]">
+          <div className="mt-[0.4cqw] truncate text-[calc(1.2cqw*var(--ms))] leading-tight text-[#6B7280]">
             {desc}
           </div>
         </div>
@@ -196,8 +209,8 @@ function AppCard({ app, on }: { app: App; on: boolean }) {
         <div
           className="flex shrink-0 items-center rounded-full p-[0.24cqw]"
           style={{
-            width: "3.2cqw",
-            height: "1.9cqw",
+            width: "calc(3.2cqw * var(--ms))",
+            height: "calc(1.9cqw * var(--ms))",
             backgroundColor: on ? ON_TRACK : OFF_TRACK,
             transition: "background-color 0.35s ease",
           }}
@@ -205,8 +218,8 @@ function AppCard({ app, on }: { app: App; on: boolean }) {
           <div
             className="rounded-full bg-white"
             style={{
-              width: "1.42cqw",
-              height: "1.42cqw",
+              width: "calc(1.42cqw * var(--ms))",
+              height: "calc(1.42cqw * var(--ms))",
               boxShadow: "0 0.15cqw 0.3cqw rgba(0,0,0,0.2)",
               transform: on ? "translateX(87%)" : "translateX(0)",
               transition: "transform 0.4s cubic-bezier(0.22,1,0.36,1)",
@@ -232,10 +245,14 @@ function AppCard({ app, on }: { app: App; on: boolean }) {
           >
             <span
               className="shrink-0 rounded-full"
-              style={{ width: "0.85cqw", height: "0.85cqw", background: ON_TRACK }}
+              style={{
+                width: "calc(0.85cqw * var(--ms))",
+                height: "calc(0.85cqw * var(--ms))",
+                background: ON_TRACK,
+              }}
             />
             <span
-              className="text-[1.15cqw] font-medium leading-none"
+              className="text-[calc(1.15cqw*var(--ms))] font-medium leading-none"
               style={{ color: ON_TRACK }}
             >
               Active during Focus Sessions
