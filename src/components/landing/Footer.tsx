@@ -101,7 +101,7 @@ export function Footer() {
               <TextPressure
                 text="FocusFlow"
                 fontFamily="Roboto Flex"
-                fontUrl="https://fonts.googleapis.com/css2?family=Roboto+Flex:opsz,wdth,wght@8..144,25..151,100..1000&display=swap"
+                fontUrl="https://fonts.googleapis.com/css2?family=Roboto+Flex:wdth,wght@60..151,300..900&display=swap"
                 flex={false}
                 alpha={false}
                 stroke={false}

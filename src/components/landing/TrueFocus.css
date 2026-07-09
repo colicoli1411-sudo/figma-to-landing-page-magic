@@ -68,6 +68,12 @@
   }
 }
 
+/* Stop the bracket pulse (it animates filter: drop-shadow — a repaint every
+   frame) once the hero is scrolled off-screen. */
+[data-offscreen="true"] .corner {
+  animation-play-state: paused;
+}
+
 .top-left {
   top: -10px;
   left: -10px;

@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import GradualBlur from "./GradualBlur";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 /**
  * Site-wide gradual blur: a fixed, progressively-blurred band pinned to the
@@ -11,6 +12,10 @@ import GradualBlur from "./GradualBlur";
  */
 export function SiteGradualBlur() {
   const [nearFooter, setNearFooter] = useState(false);
+  // The band is fixed to the viewport, so its stacked backdrop-filters are a
+  // constant compositing cost on EVERY scroll frame. On mobile, 3 layers over
+  // the 6rem bezier band look near-identical to 6 at roughly half the cost.
+  const isMobile = useIsMobile();
 
   useEffect(() => {
     const footer = document.getElementById("site-footer");
@@ -33,7 +38,7 @@ export function SiteGradualBlur() {
       position="bottom"
       height="6rem"
       strength={1.5}
-      divCount={6}
+      divCount={isMobile ? 3 : 6}
       curve="bezier"
       opacity={1}
       zIndex={40}

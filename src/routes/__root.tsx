@@ -103,14 +103,15 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         crossOrigin: "anonymous",
       },
       {
+        // One combined request for all three families, trimmed to what the
+        // site actually uses: Poppins italic only ships 600 (the single
+        // `font-semibold italic` accent in the mockups); Instrument Serif
+        // powers the italic accent words in section headings; Roboto Flex
+        // powers the footer's variable-width wordmark only — TextPressure
+        // animates just wdth/wght (wdth clamped to ≤151), so opsz and the
+        // extreme axis ranges are dropped.
         rel: "stylesheet",
-        href: "https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400;1,500;1,600&display=swap",
-      },
-      {
-        // Instrument Serif powers the italic accent words in section headings;
-        // Roboto Flex powers the footer's variable-width wordmark only.
-        rel: "stylesheet",
-        href: "https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Roboto+Flex:opsz,wdth,wght@8..144,25..151,100..1000&display=swap",
+        href: "https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,300;0,400;0,500;0,600;0,700;1,600&family=Instrument+Serif:ital@0;1&family=Roboto+Flex:wdth,wght@60..151,300..900&display=swap",
       },
     ],
   }),

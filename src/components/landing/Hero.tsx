@@ -1,7 +1,6 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { ArrowRight, Play } from "lucide-react";
 import { PurpleGlow } from "./PurpleGlow";
-import DotField from "./DotField";
 import { HeroMockup, STATUS_STYLES, type Status } from "./HeroMockup";
 import { motion } from "framer-motion";
 import gsap from "gsap";
@@ -22,6 +21,20 @@ export function Hero() {
   // Mirrors Sarah Chen's status from the mockup's Team Flow so her floating pill
   // starts "Available" and flips to "In Deep Work" in sync with the demo.
   const [sarahStatus, setSarahStatus] = useState<Status>("available");
+  // Tracks whether the hero itself is on screen, to stop its infinite bracket
+  // pulses (CSS corner-hue via data-offscreen + the framer opacity pulse)
+  // once the user scrolls past. Starts true — the hero is the initial view.
+  const [heroInView, setHeroInView] = useState(true);
+
+  useEffect(() => {
+    const el = heroRef.current;
+    if (!el || typeof IntersectionObserver === "undefined") return;
+    const io = new IntersectionObserver(([entry]) => setHeroInView(entry.isIntersecting), {
+      rootMargin: "120px 0px",
+    });
+    io.observe(el);
+    return () => io.disconnect();
+  }, []);
 
   // "Rack focus" entrance — plays once on load. Content resolves from blur to
   // sharp, echoing the camera-focus brackets around the title. useLayoutEffect
@@ -109,21 +122,15 @@ export function Hero() {
         { scale: 1 },
         {
           // Grow the whole unit (dashboard + floating cards) until it fills the
-          // viewport — shared with ContextSwitching, whose cover card starts at
-          // exactly the mockup's final width (see lib/mockup-scale.ts).
+          // viewport, sized from the cards' real extent (see lib/mockup-scale.ts).
           scale: () => computeMockupTargetScale(scaleEl),
           ease: "none",
           scrollTrigger: {
             trigger: hero,
             // Begins immediately as the user starts scrolling from the top.
             start: "top top",
-            // Normally 520px of scroll — but on very tall viewports the cover
-            // pin (hero bottom hits viewport bottom) can arrive sooner than
-            // that, so cap the range to end exactly at pin start. Keeps the
-            // mockup from still growing while it's supposed to be frozen.
-            end: () => "+=" + Math.min(520, Math.max(1, hero.offsetHeight - window.innerHeight)),
-            // Catch-up smoothing (~1s) instead of a hard wheel lock.
-            scrub: 1,
+            end: "+=520",
+            scrub: true,
             invalidateOnRefresh: true,
           },
         },
@@ -138,48 +145,6 @@ export function Hero() {
     return () => mm.revert();
   }, []);
 
-  // Cover pin: when the hero's bottom reaches the viewport bottom (the user
-  // hits the end of the mockup), the ENTIRE hero — background included — pins
-  // in place with no spacer, so the next section's card scrolls up OVER it.
-  // Pure pin, no timeline: the cover choreography (this hero's recede
-  // included — see [data-hero-recede] on the wrapper below) is driven by ONE
-  // synced timeline in ContextSwitching. Scoped via gsap.context so a single
-  // revert() tears down the pin cleanly on HMR/remount (same pattern as the
-  // Features pin).
-  useEffect(() => {
-    const hero = heroRef.current;
-    if (!hero) return;
-
-    const ctx = gsap.context(() => {
-      const mm = gsap.matchMedia();
-
-      mm.add("(min-width: 1024px) and (prefers-reduced-motion: no-preference)", () => {
-        const st = ScrollTrigger.create({
-          trigger: hero,
-          // Freeze while the mockup still reads nearly whole on screen — its
-          // end at ~75% of the viewport height, not grazing the very bottom.
-          start: "bottom 75%",
-          // Release as soon as the (nearly viewport-sized) card reaches the
-          // top of the screen — it covers the whole viewport at that moment,
-          // so the unpin is invisible and the page frees up quickly instead
-          // of feeling stuck for the whole section.
-          endTrigger: "#context-cover-card",
-          end: "top top",
-          pin: true,
-          // No spacer: the following section keeps its document position and
-          // rides up over the pinned hero — the canonical cover pattern.
-          pinSpacing: false,
-          anticipatePin: 1,
-          invalidateOnRefresh: true,
-        });
-
-        return () => st.kill();
-      });
-    }, hero);
-
-    return () => ctx.revert();
-  }, []);
-
   // Shared "lifted off the screen" treatment for the floating cards: a layered
   // ambient + brand-tinted shadow with a crisp top highlight, so they read as
   // physically hovering above the page rather than pasted onto it.
@@ -189,43 +154,14 @@ export function Hero() {
   return (
     <section
       ref={heroRef}
-      className="relative w-full overflow-x-clip"
-      style={{ backgroundColor: "#F8F9FB" }}
+      className="relative w-full overflow-x-clip pt-28 md:pt-[200px]"
       data-edit-section="Hero"
+      // Pauses the brackets' corner-hue CSS pulse off-screen (TrueFocus.css).
+      data-offscreen={!heroInView ? "true" : undefined}
     >
-      {/* Interactive dot-field background — sits behind the purple glow and all
-          hero content, spanning the full hero. Bottom-masked so the dots
-          dissolve into the next section instead of stopping on a hard line.
-          Deliberately OUTSIDE the recede wrapper: while the pinned hero is
-          covered, the glow/copy/mockup fade away but the dotted backdrop stays
-          visible behind the rising white card. */}
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-0 z-0"
-        style={{
-          WebkitMaskImage: "linear-gradient(to bottom, black 0%, black 86%, transparent 100%)",
-          maskImage: "linear-gradient(to bottom, black 0%, black 86%, transparent 100%)",
-        }}
-      >
-        <DotField
-          dotRadius={1.5}
-          dotSpacing={14}
-          bulgeStrength={0}
-          glowRadius={0}
-          sparkle={false}
-          waveAmplitude={0}
-          cursorRadius={0}
-          cursorForce={0}
-          gradientFrom="#6E56CF"
-          glowColor="#fcfbff"
-        />
-      </div>
-
-      {/* Content wrapper — carries the hero's top padding so the absolute
-          background layers span the full hero box. The pinned hero itself no
-          longer scales or fades during the cover; the "next chapter" feel
-          comes from the scrim below, which darkens everything gently. */}
-      <div className="relative w-full pt-28 md:pt-[200px]">
+      {/* The dotted background is a shared layer behind Hero + ContextSwitching
+          (see routes/index.tsx) so the dots read as one continuous field across
+          the section boundary — this section is transparent and paints over it. */}
       <PurpleGlow />
 
       <div className="relative z-10 mx-auto flex w-full flex-col items-center gap-[72px] px-6 pt-[10px] md:gap-[120px] md:px-12 lg:px-20 xl:px-32 2xl:px-48">
@@ -250,8 +186,14 @@ export function Hero() {
                       interpolate unregistered CSS-variable colours. */}
                   <motion.div
                     className="absolute inset-0 pointer-events-none"
-                    animate={{ opacity: [0.5, 1, 0.5] }}
-                    transition={{ duration: 2.4, repeat: Infinity, ease: "easeInOut" }}
+                    // Pulse only while the hero is on screen — off-screen the
+                    // brackets rest at full opacity, ready for re-entry.
+                    animate={heroInView ? { opacity: [0.5, 1, 0.5] } : { opacity: 1 }}
+                    transition={
+                      heroInView
+                        ? { duration: 2.4, repeat: Infinity, ease: "easeInOut" }
+                        : { duration: 0.3 }
+                    }
                   >
                     <span className="corner top-left focus-bracket-left" />
                     <span className="corner top-right focus-bracket-right" />
@@ -325,7 +267,7 @@ export function Hero() {
         {/* Mockup with floating overlays — static at the top, then scroll-driven
             expand to full viewport width. Dashboard + floating cards form one unit. */}
         <div
-          className="hero-preview relative w-full pb-[80px] lg:-mb-[220px] lg:pb-0"
+          className="hero-preview relative w-full pb-[80px]"
           data-edit-section="Dashboard mockup"
         >
           <div>
@@ -406,6 +348,9 @@ export function Hero() {
                 <img
                   src="/images/sarah-chen.jpg"
                   alt="Sarah Chen"
+                  width={36}
+                  height={36}
+                  decoding="async"
                   className="h-9 w-9 shrink-0 rounded-full border border-[rgba(110,86,207,0.4)] object-cover"
                 />
                 <div className="flex flex-1 flex-col">
@@ -428,19 +373,6 @@ export function Hero() {
           </div>
         </div>
       </div>
-      {/* end content wrapper */}
-      </div>
-
-      {/* Chapter scrim — a neutral dark veil over the ENTIRE pinned hero
-          (dot field included). ContextSwitching's cover timeline fades it
-          0 → ~0.4 as the bright card rises, so the frozen backdrop gently
-          darkens and the card pops — "turning to the next chapter". */}
-      <div
-        aria-hidden
-        data-hero-scrim
-        className="pointer-events-none absolute inset-0 opacity-0"
-        style={{ backgroundColor: "#0f0f14" }}
-      />
     </section>
   );
 }

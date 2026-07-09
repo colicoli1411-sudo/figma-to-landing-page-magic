@@ -593,6 +593,9 @@ function Topbar() {
         <img
           src="/images/avi-avatar.png"
           alt="Avi"
+          width={36}
+          height={36}
+          decoding="async"
           className="h-9 w-9 rounded-full object-cover"
           style={{ boxShadow: "0 0 15px rgba(170,153,236,0.4)" }}
         />
@@ -1137,6 +1140,9 @@ function TeamFlowCard({
                 <img
                   src={m.avatar}
                   alt={m.name}
+                  width={36}
+                  height={36}
+                  decoding="async"
                   className="h-9 w-9 rounded-full border border-[rgba(110,86,207,0.4)] object-cover"
                 />
               ) : (

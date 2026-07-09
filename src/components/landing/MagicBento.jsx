@@ -166,14 +166,46 @@ const MagicBento = ({
     const onScroll = () => {
       if (rafId == null) rafId = requestAnimationFrame(update);
     };
-    window.addEventListener("scroll", onScroll, { passive: true });
-    window.addEventListener("resize", onScroll);
-    update();
-    return () => {
+
+    // Only run the per-scroll-frame rect reads while the section is actually
+    // on screen — off-screen, the scroll/resize listeners are detached so the
+    // rest of the page scrolls without any layout reads from this section.
+    const attach = () => {
+      window.addEventListener("scroll", onScroll, { passive: true });
+      window.addEventListener("resize", onScroll);
+      update();
+    };
+    const detach = () => {
       if (rafId != null) cancelAnimationFrame(rafId);
+      rafId = null;
       window.removeEventListener("scroll", onScroll);
       window.removeEventListener("resize", onScroll);
       setActive(null);
+    };
+
+    let io = null;
+    if (typeof IntersectionObserver !== "undefined") {
+      let attached = false;
+      io = new IntersectionObserver(
+        ([entry]) => {
+          if (entry.isIntersecting && !attached) {
+            attached = true;
+            attach();
+          } else if (!entry.isIntersecting && attached) {
+            attached = false;
+            detach();
+          }
+        },
+        { rootMargin: "200px 0px" },
+      );
+      io.observe(section);
+    } else {
+      attach();
+    }
+
+    return () => {
+      io?.disconnect();
+      detach();
     };
   }, []);
 

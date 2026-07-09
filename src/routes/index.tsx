@@ -1,21 +1,43 @@
-import { useEffect } from "react";
+import { lazy, Suspense, useEffect, type ReactNode } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { Header } from "@/components/landing/Header";
 import { Hero } from "@/components/landing/Hero";
 import { ContextSwitching } from "@/components/landing/ContextSwitching";
-import { Features } from "@/components/landing/Features";
-import { RoiCalculator } from "@/components/landing/RoiCalculator";
-import { Pricing } from "@/components/landing/Pricing";
-import { TestimonialsSection } from "@/components/landing/TestimonialsSection";
-import { FAQSection } from "@/components/landing/FAQSection";
-import { ContactSection } from "@/components/landing/ContactSection";
-import { Footer } from "@/components/landing/Footer";
+import DotField from "@/components/landing/DotField";
 import { SiteGradualBlur } from "@/components/landing/SiteGradualBlur";
 import { PageLoader } from "@/components/landing/PageLoader";
+import { scheduleStRefresh } from "@/lib/scrolltrigger-refresh";
 
-
+// Below-the-fold sections are code-split so the initial mobile bundle only
+// parses the shell + hero. React 19 streaming SSR still renders them on the
+// server (full HTML for SEO / no fallback flash); on the client each chunk
+// hydrates independently. Header/Hero/ContextSwitching stay eager —
+// ContextSwitching shares the mockup-scale handshake with Hero.
+const Features = lazy(() =>
+  import("@/components/landing/Features").then((m) => ({ default: m.Features })),
+);
+const TestimonialsSection = lazy(() =>
+  import("@/components/landing/TestimonialsSection").then((m) => ({
+    default: m.TestimonialsSection,
+  })),
+);
+const RoiCalculator = lazy(() =>
+  import("@/components/landing/RoiCalculator").then((m) => ({ default: m.RoiCalculator })),
+);
+const Pricing = lazy(() =>
+  import("@/components/landing/Pricing").then((m) => ({ default: m.Pricing })),
+);
+const FAQSection = lazy(() =>
+  import("@/components/landing/FAQSection").then((m) => ({ default: m.FAQSection })),
+);
+const ContactSection = lazy(() =>
+  import("@/components/landing/ContactSection").then((m) => ({ default: m.ContactSection })),
+);
+const Footer = lazy(() =>
+  import("@/components/landing/Footer").then((m) => ({ default: m.Footer })),
+);
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -42,6 +64,30 @@ export const Route = createFileRoute("/")({
 });
 
 gsap.registerPlugin(ScrollTrigger);
+
+/** Fires a debounced ScrollTrigger.refresh() when a lazy section's real
+ *  content mounts. Rendered INSIDE the Suspense boundary, after the section,
+ *  so it only runs once the chunk has arrived and changed the page height —
+ *  keeping every trigger's start/end positions correct (the fragile part of
+ *  this page's scroll choreography). */
+function MountRefresh() {
+  useEffect(() => {
+    scheduleStRefresh();
+  }, []);
+  return null;
+}
+
+/** Suspense wrapper for a code-split section: reserves an approximate height
+ *  while the chunk loads (pre-hydration only — the post-mount refresh corrects
+ *  the real layout), then refreshes ScrollTrigger when the content lands. */
+function LazySection({ minHeight, children }: { minHeight: number; children: ReactNode }) {
+  return (
+    <Suspense fallback={<div style={{ minHeight }} aria-hidden />}>
+      {children}
+      <MountRefresh />
+    </Suspense>
+  );
+}
 
 function Index() {
   // Web fonts (Poppins / Instrument Serif) and late-loading images/mockups shift
@@ -79,19 +125,52 @@ function Index() {
           exposed correctly to assistive tech. */}
       <Header />
       <main id="main-content">
-        <Hero />
-        <ContextSwitching />
-        <Features />
+        {/* Shared dotted background spanning Hero + ContextSwitching so the
+            dots read as one continuous field across the section boundary
+            (both sections are transparent and paint above this layer). */}
+        <div className="relative" style={{ backgroundColor: "#F8F9FB" }}>
+          <div aria-hidden className="pointer-events-none absolute inset-0">
+            <DotField
+              dotRadius={1.5}
+              dotSpacing={14}
+              bulgeStrength={0}
+              glowRadius={0}
+              sparkle={false}
+              waveAmplitude={0}
+              cursorRadius={0}
+              cursorForce={0}
+              gradientFrom="#6E56CF"
+              glowColor="#fcfbff"
+            />
+          </div>
+          <Hero />
+          <ContextSwitching />
+        </div>
+        <LazySection minHeight={1200}>
+          <Features />
+        </LazySection>
         {/* Social proof lands before the buying decision: testimonials validate
             the claims, the ROI calculator quantifies them, pricing closes. */}
-        <TestimonialsSection />
-        <RoiCalculator />
-        <Pricing />
-        <FAQSection />
-        <ContactSection />
+        <LazySection minHeight={800}>
+          <TestimonialsSection />
+        </LazySection>
+        <LazySection minHeight={700}>
+          <RoiCalculator />
+        </LazySection>
+        <LazySection minHeight={900}>
+          <Pricing />
+        </LazySection>
+        <LazySection minHeight={700}>
+          <FAQSection />
+        </LazySection>
+        <LazySection minHeight={600}>
+          <ContactSection />
+        </LazySection>
       </main>
       <div id="site-footer">
-        <Footer />
+        <LazySection minHeight={500}>
+          <Footer />
+        </LazySection>
       </div>
       {/* Site-wide gradual blur pinned to the viewport bottom; fades out at the footer. */}
       <SiteGradualBlur />

@@ -23,7 +23,7 @@ const useResizeObserver = (callback, elements, dependencies) => {
   }, [callback, elements, dependencies]);
 };
 
-const useAnimationLoop = (trackRef, targetVelocity, seqWidth, seqHeight, isHovered, hoverSpeed, isVertical) => {
+const useAnimationLoop = (trackRef, targetVelocity, seqWidth, seqHeight, isHovered, hoverSpeed, isVertical, enabled = true) => {
   const rafRef = useRef(null);
   const lastTimestampRef = useRef(null);
   const offsetRef = useRef(0);
@@ -31,7 +31,9 @@ const useAnimationLoop = (trackRef, targetVelocity, seqWidth, seqHeight, isHover
 
   useEffect(() => {
     const track = trackRef.current;
-    if (!track) return;
+    // `enabled` gates the rAF while the loop is scrolled off-screen; offsetRef
+    // persists so the marquee resumes exactly where it stopped.
+    if (!track || !enabled) return;
     const seqSize = isVertical ? seqHeight : seqWidth;
 
     if (seqSize > 0) {
@@ -63,7 +65,7 @@ const useAnimationLoop = (trackRef, targetVelocity, seqWidth, seqHeight, isHover
       if (rafRef.current !== null) cancelAnimationFrame(rafRef.current);
       lastTimestampRef.current = null;
     };
-  }, [targetVelocity, seqWidth, seqHeight, isHovered, hoverSpeed, isVertical, trackRef]);
+  }, [targetVelocity, seqWidth, seqHeight, isHovered, hoverSpeed, isVertical, trackRef, enabled]);
 };
 
 export const LogoLoop = memo(({ logos, speed = 120, direction = 'left', width = '100%', logoHeight = 40, gap = 32, pauseOnHover, hoverSpeed, fadeOut = false, className, style }) => {
@@ -74,6 +76,20 @@ export const LogoLoop = memo(({ logos, speed = 120, direction = 'left', width = 
   const [seqHeight, setSeqHeight] = useState(0);
   const [copyCount, setCopyCount] = useState(ANIMATION_CONFIG.MIN_COPIES);
   const [isHovered, setIsHovered] = useState(false);
+  // Pause the marquee's rAF entirely while the loop is scrolled off-screen.
+  const [inView, setInView] = useState(false);
+
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    if (typeof IntersectionObserver === 'undefined') {
+      setInView(true);
+      return;
+    }
+    const io = new IntersectionObserver(([entry]) => setInView(entry.isIntersecting), { rootMargin: '120px 0px' });
+    io.observe(el);
+    return () => io.disconnect();
+  }, []);
 
   const effectiveHoverSpeed = useMemo(() => {
     if (hoverSpeed !== undefined) return hoverSpeed;
@@ -102,7 +118,7 @@ export const LogoLoop = memo(({ logos, speed = 120, direction = 'left', width = 
   }, [isVertical]);
 
   useResizeObserver(updateDimensions, [containerRef, seqRef], [logos, gap, logoHeight, isVertical]);
-  useAnimationLoop(trackRef, targetVelocity, seqWidth, seqHeight, isHovered, effectiveHoverSpeed, isVertical);
+  useAnimationLoop(trackRef, targetVelocity, seqWidth, seqHeight, isHovered, effectiveHoverSpeed, isVertical, inView);
 
   const cssVariables = useMemo(() => ({
     '--logoloop-gap': `${gap}px`,

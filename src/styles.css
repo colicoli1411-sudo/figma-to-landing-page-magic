@@ -232,6 +232,28 @@
   animation-play-state: paused;
 }
 
+/* Masks .glow-border down to a ~2px ring so the rotating conic sweep can overlay
+   a translucent card (the testimonials focal card) as a glowing border, without
+   the gradient tinting the whole surface. Same mask trick as the pricing cards'
+   border glow; pair with `.glow-border` on an `absolute inset-0` overlay. */
+.glow-border-frame {
+  padding: 2px;
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+          mask-composite: exclude;
+}
+
+/* Off-screen animation pausing — section roots toggle data-offscreen (via
+   useInView) so their infinite CSS animations stop burning frames while
+   scrolled away. !important beats the cards' inline `animation` shorthand. */
+[data-offscreen="true"] .glow-border {
+  animation-play-state: paused;
+}
+
+[data-offscreen="true"] .floating-distraction-card {
+  animation-play-state: paused !important;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .glow-border {
     animation: none;

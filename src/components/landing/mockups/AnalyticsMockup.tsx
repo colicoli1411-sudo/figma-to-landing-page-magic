@@ -1,5 +1,6 @@
 import { useEffect, useId, useState } from "react";
 import { Clock, CalendarDays, Award, TrendingUp } from "lucide-react";
+import { useInView } from "@/hooks/use-in-view";
 
 /**
  * "Capacity Analytics" feature mockup.
@@ -56,9 +57,11 @@ export function AnalyticsMockup() {
   // True only during the close phase — switches both charts to the shared,
   // un-staggered CLOSE_MS transition so they collapse as one motion.
   const [closing, setClosing] = useState(false);
+  // Pause the chart choreography while the mockup is scrolled off-screen.
+  const [rootRef, inView] = useInView<HTMLDivElement>();
 
   useEffect(() => {
-    if (prefersReduced()) return;
+    if (prefersReduced() || !inView) return;
     // Open in sequence (grow bars → draw snake → hold), then close BOTH charts
     // at once: same duration, no stagger, so they start and finish together.
     let step = 0;
@@ -83,10 +86,11 @@ export function AnalyticsMockup() {
     };
     id = setTimeout(tick, 500);
     return () => clearTimeout(id);
-  }, []);
+  }, [inView]);
 
   return (
     <div
+      ref={rootRef}
       className="relative h-full w-full overflow-hidden"
       style={{ background: "#F2ECFE", containerType: "inline-size" }}
     >

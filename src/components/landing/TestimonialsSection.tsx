@@ -136,12 +136,12 @@ function TestimonialCard({ t, isActive }: { t: Testimonial; isActive?: boolean }
                 "radial-gradient(120% 85% at 50% -12%, rgba(215,207,249,0.55) 0%, rgba(237,233,254,0.30) 34%, rgba(255,255,255,0) 68%), linear-gradient(135deg, rgba(245,243,255,0.65) 0%, rgba(237,233,254,0.32) 46%, rgba(224,231,255,0.48) 100%)",
             }}
           />
-          {/* Static soft brand edge on the active card — the rotating glow is
-              reserved for buttons + the ROI showcase card, so section frames
-              stay calm. */}
+          {/* Rotating mint→violet conic border glow on the focal card — the same
+              sweep as the ROI showcase card, masked to a ~2px ring so it reads as
+              a glowing border over the translucent surface. */}
           <div
             aria-hidden
-            className="pointer-events-none absolute inset-0 rounded-[32px] border border-[#C4B8F3]/60"
+            className="glow-border glow-border-frame pointer-events-none absolute inset-0 rounded-[32px]"
           />
           {/* Top sheen — a thin glint of light along the upper edge */}
           <div
@@ -208,6 +208,8 @@ function CurvedCarousel({
   // easing (autoplay / arrow nav keep a calmer transition).
   const [isSettling, setIsSettling] = useState(false);
   const [isRTL, setIsRTL] = useState(false);
+  // Pause autoplay while the carousel is scrolled off-screen.
+  const [inView, setInView] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const timerRef = useRef<number | null>(null);
   const dragState = useRef<{
@@ -268,9 +270,9 @@ function CurvedCarousel({
       window.clearInterval(timerRef.current);
       timerRef.current = null;
     }
-    if (!autoplay || paused || isDragging) return;
+    if (!autoplay || paused || isDragging || !inView) return;
     timerRef.current = window.setInterval(() => go(1), autoplayInterval);
-  }, [autoplay, paused, isDragging, autoplayInterval, go]);
+  }, [autoplay, paused, isDragging, inView, autoplayInterval, go]);
 
   const stopAutoPlay = useCallback(() => {
     if (timerRef.current != null) {
@@ -298,6 +300,21 @@ function CurvedCarousel({
     const onVis = () => setPaused(document.hidden);
     document.addEventListener("visibilitychange", onVis);
     return () => document.removeEventListener("visibilitychange", onVis);
+  }, []);
+
+  // Pause when scrolled off-screen
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    if (typeof IntersectionObserver === "undefined") {
+      setInView(true);
+      return;
+    }
+    const io = new IntersectionObserver(([entry]) => setInView(entry.isIntersecting), {
+      rootMargin: "120px 0px",
+    });
+    io.observe(el);
+    return () => io.disconnect();
   }, []);
 
   // Keyboard nav (logical, respects RTL: ArrowRight always = next-in-reading-order)
@@ -460,6 +477,9 @@ function CurvedCarousel({
     <div
       className="relative w-full"
       style={{ perspective: `${PERSPECTIVE}px` }}
+      // Pauses the focal card's rotating conic border glow (.glow-border) while
+      // the carousel is scrolled off-screen (see styles.css).
+      data-offscreen={!inView ? "true" : undefined}
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
       onTouchStart={() => setPaused(true)}

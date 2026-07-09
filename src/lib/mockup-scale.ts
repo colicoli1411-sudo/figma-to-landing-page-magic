@@ -1,7 +1,5 @@
 /**
- * The hero mockup's scroll-grow target scale — shared between Hero.tsx (the
- * grow tween itself) and ContextSwitching.tsx (the white cover card starts at
- * exactly the mockup's final rendered width, so it emerges matching it).
+ * The hero mockup's scroll-grow target scale (used by Hero.tsx's grow tween).
  *
  * The unit (dashboard + floating cards) grows until it fills the viewport,
  * sized from the cards' real extent so they're never clipped, hard-capped so
@@ -30,9 +28,4 @@ export function computeMockupTargetScale(scaleEl: HTMLElement): number {
   // clamp the "grow" tween would actually SHRINK the mockup while scrolling.
   const maxByDashboard = (vw * 0.75) / scaleEl.offsetWidth;
   return Math.max(1, Math.min(floatingSafe, maxByDashboard));
-}
-
-/** The mockup's final on-screen width (px) once the scroll-grow completes. */
-export function computeMockupFinalWidth(scaleEl: HTMLElement): number {
-  return scaleEl.offsetWidth * computeMockupTargetScale(scaleEl);
 }

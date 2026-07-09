@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useInView } from "@/hooks/use-in-view";
 import {
   SlackIcon,
   DiscordIcon,
@@ -60,9 +61,11 @@ const CARD_SHADOW =
 export function MuteMockup() {
   // Reduced motion → show the resolved "all muted" state, no looping animation.
   const [on, setOn] = useState<boolean[]>(() => Array(APPS.length).fill(prefersReduced()));
+  // Pause the demo loop entirely while the mockup is scrolled off-screen.
+  const [rootRef, inView] = useInView<HTMLDivElement>();
 
   useEffect(() => {
-    if (prefersReduced()) return;
+    if (prefersReduced() || !inView) return;
 
     const STAGGER = 620; // gap between consecutive cards switching on
     const HOLD = 3000; // hold once all are on
@@ -94,10 +97,11 @@ export function MuteMockup() {
 
     id = setTimeout(tick, START);
     return () => clearTimeout(id);
-  }, []);
+  }, [inView]);
 
   return (
     <div
+      ref={rootRef}
       className="relative h-full w-full overflow-hidden"
       style={{ background: "#F2ECFE", containerType: "inline-size" }}
     >

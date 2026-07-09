@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
+import { useInView } from "@/hooks/use-in-view";
 import { SplitText } from "./SplitText";
 import * as SliderPrimitive from "@radix-ui/react-slider";
 import { animate, motion, useMotionValue, useReducedMotion, useTransform } from "framer-motion";
@@ -127,6 +128,7 @@ function GlowBorder({ children }: { children: React.ReactNode }) {
 export function RoiCalculator() {
   const [teamSize, setTeamSize] = useState(10);
   const [monthlySalary, setMonthlySalary] = useState(10000);
+  const [sectionRef, sectionInView] = useInView<HTMLElement>();
 
   const { moneySavedPerYear, hoursReclaimedPerWeek } = useMemo(() => {
     const p = CAPACITY_LOST_PCT / 100;
@@ -140,9 +142,13 @@ export function RoiCalculator() {
 
   return (
     <section
+      ref={sectionRef}
       id="roi-calculator"
       className="relative overflow-hidden py-24 md:py-32"
       style={{ backgroundColor: "#F8F9FB" }}
+      // Pauses the card's infinite conic-gradient sweep (.glow-border) while
+      // the section is scrolled off-screen (see styles.css).
+      data-offscreen={!sectionInView ? "true" : undefined}
     >
       {/* Interactive dot-field background — same treatment as the hero, sitting
           behind the aurora mesh and all content. Edge-masked so the dots

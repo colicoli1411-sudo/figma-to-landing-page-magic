@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { Users } from "lucide-react";
+import { useInView } from "@/hooks/use-in-view";
 
 /**
  * "Team Focus Visibility" feature mockup.
@@ -64,8 +65,11 @@ export function VisibilityMockup() {
   const [statusIdx, setStatusIdx] = useState<number[]>(() =>
     MEMBERS.map((m) => STATUS_ORDER.indexOf(m.status)),
   );
+  // Pause the status-wave loop while the mockup is scrolled off-screen.
+  const [rootRef, inView] = useInView<HTMLDivElement>();
 
   useEffect(() => {
+    if (!inView) return;
     const STEP = 650; // gap between consecutive members in a sweep
     const PAUSE = 2000; // hold after a full sweep, before it restarts
     let member = 0;
@@ -85,10 +89,11 @@ export function VisibilityMockup() {
 
     id = setTimeout(tick, STEP);
     return () => clearTimeout(id);
-  }, []);
+  }, [inView]);
 
   return (
     <div
+      ref={rootRef}
       className="relative h-full w-full overflow-hidden"
       style={{ background: "#EDE9FE", containerType: "inline-size" }}
     >
@@ -170,6 +175,10 @@ export function VisibilityMockup() {
                 <img
                   src={m.avatar}
                   alt={m.name}
+                  width={36}
+                  height={36}
+                  loading="lazy"
+                  decoding="async"
                   className="h-[calc(4cqw*var(--ms))] w-[calc(4cqw*var(--ms))] shrink-0 rounded-full border border-[rgba(110,86,207,0.4)] object-cover"
                 />
                 <div className="flex min-w-0 flex-1 flex-col gap-[0.5cqw]">
