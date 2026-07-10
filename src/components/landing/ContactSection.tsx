@@ -60,7 +60,7 @@ export function ContactSection() {
   return (
     <section
       id="contact"
-      className="relative w-full overflow-x-clip px-4 py-24 sm:px-6 md:py-32"
+      className="relative w-full overflow-x-clip py-24 md:py-32"
     >
       {/* Ambient violet + sky glows on the light area around the card — keep the
           page-wide colour flow continuous from the FAQ above. Subtle, edge-fading. */}
@@ -83,9 +83,13 @@ export function ContactSection() {
         />
       </div>
 
-      {/* Contained dark card rather than a full-bleed rectangle. */}
+      {/* Contained dark card rather than a full-bleed rectangle. Card edges are
+          aligned to the header pill: the wrapper mirrors the header's outer box
+          exactly (max-w-[1400px] then px-4 sm:px-6 md:px-8 — see Header.tsx), so
+          the card spans the same width as the header at every breakpoint. */}
+      <div className="relative mx-auto w-full max-w-[1400px] px-4 sm:px-6 md:px-8">
       <div
-        className="relative mx-auto max-w-6xl overflow-hidden rounded-[28px] text-white shadow-[0_30px_80px_-30px_rgba(110,86,207,0.45)] md:rounded-[40px]"
+        className="relative w-full overflow-hidden rounded-[28px] text-white shadow-[0_30px_80px_-30px_rgba(110,86,207,0.45)] md:rounded-[40px]"
         style={{ backgroundColor: "#07070c" }}
       >
         {/* Purple radial glow anchored top-left, matching the reference background. */}
@@ -116,13 +120,18 @@ export function ContactSection() {
             For teams and enterprise plans, tell us about your setup and we'll
             tailor FocusFlow for your org. We usually reply within one business day.
           </SplitText>
-          <p className="text-sm text-white/50">
+          <SplitText
+            as="p"
+            reveal
+            revealDelay={0.18}
+            className="text-sm text-white/50"
+          >
             Just want to try it yourself?{" "}
             <a href="/signup" className="font-medium text-white/80 underline underline-offset-2 hover:text-white">
               Start a free trial
             </a>
             .
-          </p>
+          </SplitText>
         </div>
 
         {/* Form */}
@@ -237,6 +246,7 @@ export function ContactSection() {
         )}
         </SplitText>
         </div>
+      </div>
       </div>
     </section>
   );

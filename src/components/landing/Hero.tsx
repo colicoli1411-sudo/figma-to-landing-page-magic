@@ -212,7 +212,7 @@ export function Hero() {
                 Forced line breaks only apply on lg+ (where there's room); on
                 smaller screens it wraps naturally with balanced lines. */}
             <p
-              className="hero-subtitle max-w-[520px] text-pretty text-center text-[13px] font-light leading-[1.65] tracking-[-0.01em] text-neutral-500 sm:text-[17px] sm:leading-[1.72] lg:max-w-[680px]"
+              className="hero-subtitle max-w-[520px] text-pretty text-center text-[13px] font-light leading-[1.65] tracking-[-0.01em] text-[#4b5563] sm:text-[17px] sm:leading-[1.72] lg:max-w-[680px]"
               data-edit-id="hero-subtitle"
               data-edit-label="Subtitle"
             >
@@ -259,7 +259,7 @@ export function Hero() {
           </div>
           {/* Trial trust line — every self-serve plan starts with a 14-day
               free trial. */}
-          <p className="hero-cta text-[13px] font-medium text-neutral-500">
+          <p className="hero-cta text-[13px] font-medium text-[#4b5563]">
             14-day free trial · Cancel anytime
           </p>
         </div>

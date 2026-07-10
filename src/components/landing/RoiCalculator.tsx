@@ -150,9 +150,23 @@ export function RoiCalculator() {
       // the section is scrolled off-screen (see styles.css).
       data-offscreen={!sectionInView ? "true" : undefined}
     >
-      {/* The dotted background is a shared layer spanning Testimonials + this
-          section (see routes/index.tsx SharedDotsGroup) so the dots read as one
-          continuous field across the seam — this section is transparent. */}
+      {/* Violet gradient wash — same treatment as Features, varying the page's
+          background rhythm: it covers the shared dot field (SharedDotsGroup in
+          routes/index.tsx) through this section, so the dots only show through
+          the softly-faded top edge. Soft top fade so the Testimonials dots
+          dissolve into the gradient (possible here — unlike Features, this
+          section isn't pinned); opaque to the bottom, where dark Pricing
+          takes over. */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0"
+        style={{
+          background:
+            "linear-gradient(170deg, #F8F9FB 0%, #F3F0FC 25%, #EDE8FA 50%, #F3F0FC 75%, #F8F9FB 100%)",
+          WebkitMaskImage: "linear-gradient(to bottom, transparent 0%, black 18%, black 100%)",
+          maskImage: "linear-gradient(to bottom, transparent 0%, black 18%, black 100%)",
+        }}
+      />
 
       {/* Ambient aurora mesh — echoes Features, kept subtle. Edge-masked so the
           blurred blobs dissolve before the overflow-hidden boundary. */}
@@ -196,17 +210,17 @@ export function RoiCalculator() {
             reveal
             className="text-balance text-4xl font-bold tracking-tight text-neutral-900 md:text-5xl"
           >
-            Put a <span className="italic font-serif font-normal text-violet-700">number</span> on
-            your team's focus.
+            Distraction has a{" "}
+            <span className="italic font-serif font-normal text-violet-700">price</span>. See yours.
           </SplitText>
           <SplitText
             as="p"
             reveal
             revealDelay={0.12}
-            className="max-w-[560px] text-[15px] font-light leading-relaxed text-[#6b7280] sm:text-[16px]"
+            className="max-w-[560px] text-[15px] font-light leading-relaxed text-[#4b5563] sm:text-[16px]"
           >
-            Context switching quietly drains your team's capacity. Drag the sliders to see what
-            FocusFlow reclaims — in dollars and in hours.
+            Every context switch burns hours and budget. Drag the sliders to see your team's real
+            number — the dollars and weekly hours FocusFlow gives back.
           </SplitText>
         </div>
 

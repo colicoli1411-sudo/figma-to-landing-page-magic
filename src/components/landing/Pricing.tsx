@@ -12,11 +12,11 @@ export const Pricing = () => {
           reveal
           className="text-4xl md:text-5xl font-bold tracking-tight text-white"
         >
-          Transparent{" "}
+          Simple, transparent{" "}
           <span className="italic font-serif font-normal text-violet-400">
             pricing
           </span>
-          , from solo focus to whole orgs.
+          .
         </SplitText>
       </div>
 

@@ -23,15 +23,17 @@ const integrationLogos = [
 export function IntegrationStrip() {
   return (
     <div>
-      <p className="mb-6 text-center text-[13px] font-medium text-[#6b7280]">
+      <p className="mb-6 text-center text-[13px] font-medium text-[#4b5563]">
         No new tab needed — connects to where your team already works.
       </p>
 
-      {/* Tablet & up: single row */}
+      {/* Tablet & up: single row. Slow marquee — with only a handful of logos a
+          faster scroll makes the short loop obviously repeat, so keep it a
+          gentle drift. */}
       <div className="hidden sm:block">
         <LogoLoop
           logos={integrationLogos}
-          speed={26}
+          speed={14}
           direction="left"
           gap={80}
           logoHeight={28}

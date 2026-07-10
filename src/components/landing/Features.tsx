@@ -258,7 +258,7 @@ export function Features() {
                   <h3 className="mb-5 text-3xl font-bold tracking-tight text-neutral-900 md:text-4xl">
                     {f.title}
                   </h3>
-                  <p className="text-lg leading-relaxed text-neutral-600">{f.description}</p>
+                  <p className="text-lg leading-relaxed text-[#4b5563]">{f.description}</p>
                   <div className="mt-8 flex gap-2">
                     {FEATURES.map((_, j) => (
                       <span
@@ -347,7 +347,7 @@ function MobileCarousel() {
                   <h3 className="text-balance text-[26px] font-bold leading-[1.15] tracking-tight text-neutral-900 sm:text-[30px]">
                     {f.title}
                   </h3>
-                  <p className="max-w-[44ch] text-[15px] leading-relaxed text-neutral-500 sm:text-base">
+                  <p className="max-w-[44ch] text-[15px] leading-relaxed text-[#4b5563] sm:text-base">
                     {f.description}
                   </p>
                 </div>

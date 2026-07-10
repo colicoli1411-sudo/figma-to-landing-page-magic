@@ -616,15 +616,17 @@ export function TestimonialsSection() {
       // header (z-50). The ambient bottom-blur keeps working on other sections.
       className="relative z-[45] w-full py-24 md:py-32 overflow-hidden"
     >
-      {/* Violet/mint tint — separate edge-masked layer over the plain base, so
-          the tint breathes in from the edges instead of starting on a hard line
-          against the clean #F8F9FB of the neighbouring sections. */}
+      {/* Violet/mint aura — a soft FILLED dome: densest at its core (behind the
+          testimonial cards) and fading evenly outward to nothing, so the fade
+          edge reads as a half-circle arcing up behind the heading and down the
+          sides. Sits under everything (-z-10) and stays faint. The edge mask
+          just keeps the top/bottom section seams from cutting hard. */}
       <div
         aria-hidden
         className="pointer-events-none absolute inset-0 -z-10"
         style={{
           background:
-            "radial-gradient(ellipse at top, rgba(110, 86, 207, 0.14) 0%, rgba(135, 212, 196, 0.12) 42%, rgba(248, 249, 251, 0) 78%)",
+            "radial-gradient(ellipse 62% 48% at 50% 58%, rgba(110, 86, 207, 0.16) 0%, rgba(110, 86, 207, 0.09) 42%, rgba(135, 212, 196, 0.05) 72%, transparent 100%)",
           WebkitMaskImage:
             "linear-gradient(to bottom, transparent 0%, black 14%, black 86%, transparent 100%)",
           maskImage:
@@ -646,7 +648,7 @@ export function TestimonialsSection() {
           as="p"
           reveal
           revealDelay={0.12}
-          className="text-base md:text-lg text-neutral-600 max-w-2xl"
+          className="text-base md:text-lg text-[#4b5563] max-w-2xl"
         >
           See how real engineering teams use FocusFlow to stay consistent, protect their time, and
           ship faster.

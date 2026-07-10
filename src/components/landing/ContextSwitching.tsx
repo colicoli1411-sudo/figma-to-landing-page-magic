@@ -213,6 +213,9 @@ const snippetVariants: Variants = {
 
 export function ContextSwitching() {
   const sectionRef = useRef<HTMLElement | null>(null);
+  // The centred copy group — the lavender wash is anchored to ITS centre, not
+  // the section's, so the readable halo tracks the text (see the measure effect).
+  const copyRef = useRef<HTMLDivElement | null>(null);
   // once: false so the chaos loop can pause off-screen and resume on re-entry;
   // fire early (amount 0.05) so fast scrolling doesn't outrun the entrance.
   const inView = useInView(sectionRef, { once: false, amount: 0.05 });
@@ -235,6 +238,37 @@ export function ContextSwitching() {
   // finishes (headline → beat → subtitle → cards). GSAP tweens keep playing
   // even if the user scrolls away mid-sequence, so this always resolves.
   const [introDone, setIntroDone] = useState(false);
+  // Vertical centre of the copy group as a % of the section height, driving the
+  // lavender wash's focal point. SSR/first paint = 50 (copy is section-centred
+  // on desktop, where there's no mobile card grid below it to push it up), then
+  // corrected on mount — on mobile the grid shifts the copy above centre.
+  const [washCenterPct, setWashCenterPct] = useState(50);
+
+  useEffect(() => {
+    const section = sectionRef.current;
+    const copy = copyRef.current;
+    if (!section || !copy) return;
+    const measure = () => {
+      const s = section.getBoundingClientRect();
+      if (s.height === 0) return;
+      const c = copy.getBoundingClientRect();
+      const centerY = c.top - s.top + c.height / 2;
+      setWashCenterPct(Math.round((centerY / s.height) * 1000) / 10);
+    };
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(section);
+    ro.observe(copy);
+    window.addEventListener("resize", measure);
+    // Late font swaps reflow the copy after first measure.
+    if (typeof document !== "undefined" && document.fonts) {
+      document.fonts.ready.then(measure);
+    }
+    return () => {
+      ro.disconnect();
+      window.removeEventListener("resize", measure);
+    };
+  }, []);
 
   useEffect(() => {
     // Reduced motion: SplitText skips its tweens entirely, so the subtitle's
@@ -316,54 +350,22 @@ export function ContextSwitching() {
       {/* The dotted background is a shared layer behind Hero + ContextSwitching
           (see routes/index.tsx) so the dots read as one continuous field across
           the section boundary — this section is transparent and paints over it. */}
-      {/* Lavender centre — wide soft ellipse behind the copy; the dots stay
-          visible toward the screen edges around it. */}
+      {/* Lavender centre — one clean, symmetric CIRCLE behind the copy. Sized
+          `farthest-side` so it grows with the section to cover the whole copy
+          block and bleed well past it (out toward the rings) on wide desktops,
+          while staying a true round bloom. Its centre tracks the copy group
+          (50% X, washCenterPct Y) so it sits on the text even when the mobile
+          card grid pushes the copy up. Kept a light, airy violet (low peak
+          alpha + long multi-stop falloff) so a bigger bloom still reads pale,
+          and the dots stay visible around it. This is the ONLY tint — the old
+          diagonal mint/violet glows are gone, so nothing pulls colour sideways. */}
       <div
         aria-hidden
         className="pointer-events-none absolute inset-0"
         style={{
-          background:
-            "radial-gradient(ellipse 70% 60% at center, rgba(110,86,207,0.14) 0%, rgba(110,86,207,0.07) 45%, transparent 78%)",
+          background: `radial-gradient(circle farthest-side at 50% ${washCenterPct}%, rgba(110,86,207,0.10) 0%, rgba(150,130,225,0.06) 45%, rgba(110,86,207,0.02) 72%, transparent 92%)`,
         }}
       />
-      {/* Ambient violet + mint glows — soft page-wide colour flow, edge-masked
-          so they dissolve before the section boundary. */}
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-0"
-        style={{
-          WebkitMaskImage:
-            "linear-gradient(to bottom, transparent 0%, black 12%, black 88%, transparent 100%)",
-          maskImage:
-            "linear-gradient(to bottom, transparent 0%, black 12%, black 88%, transparent 100%)",
-        }}
-      >
-        {/* Below lg the blur filter is dropped: mobile GPUs rasterize huge
-            filtered layers lazily, so the glow visibly completed itself only
-            after scrolling. Slightly wider gradient stops give the same
-            softness and paint instantly. */}
-        <div
-          className="absolute -left-[10%] top-[6%] h-[620px] w-[620px] rounded-full opacity-50"
-          style={{
-            background:
-              cardLayer === "mobile"
-                ? "radial-gradient(circle at 45% 45%, rgba(135,212,196,0.20) 0%, rgba(135,212,196,0.10) 48%, transparent 82%)"
-                : "radial-gradient(circle at 45% 45%, rgba(135,212,196,0.20) 0%, rgba(135,212,196,0.10) 40%, transparent 72%)",
-            filter: cardLayer === "mobile" ? undefined : "blur(120px)",
-          }}
-        />
-        <div
-          className="absolute -right-[10%] bottom-[6%] h-[640px] w-[640px] rounded-full opacity-55"
-          style={{
-            background:
-              cardLayer === "mobile"
-                ? "radial-gradient(circle at 55% 55%, rgba(110,86,207,0.22) 0%, rgba(170,153,236,0.10) 48%, transparent 82%)"
-                : "radial-gradient(circle at 55% 55%, rgba(110,86,207,0.22) 0%, rgba(170,153,236,0.10) 40%, transparent 72%)",
-            filter: cardLayer === "mobile" ? undefined : "blur(120px)",
-          }}
-        />
-      </div>
-
       {/* Orbit rings (desktop) — full-section layer so the decorative echo
           rings can run past the 1400px frame to the screen edges. The fade
           mask lives on THIS wrapper (its border-box spans the whole section):
@@ -473,7 +475,10 @@ export function ContextSwitching() {
       )}
 
       {/* Center content — copy vertically centered in the full-height section. */}
-      <div className="relative z-10 mx-auto flex max-w-[760px] flex-col items-center gap-6 text-center lg:max-w-[640px] xl:max-w-[860px]">
+      <div
+        ref={copyRef}
+        className="relative z-10 mx-auto flex max-w-[760px] flex-col items-center gap-6 text-center lg:max-w-[640px] xl:max-w-[860px]"
+      >
         <SplitText
           as="h2"
           text={HEADLINE_TEXT}
@@ -488,7 +493,7 @@ export function ContextSwitching() {
           reveal
           revealDelay={SUBTITLE_DELAY_S}
           onComplete={() => setIntroDone(true)}
-          className="max-w-[640px] text-[15px] font-light leading-relaxed tracking-[-0.01em] text-[#6b7280] sm:text-[16px] lg:max-w-[520px] xl:max-w-[640px]"
+          className="max-w-[640px] text-[15px] font-light leading-relaxed tracking-[-0.01em] text-[#4b5563] sm:text-[16px] lg:max-w-[520px] xl:max-w-[640px]"
         />
       </div>
 
