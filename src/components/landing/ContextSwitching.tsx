@@ -153,9 +153,14 @@ function cardPos(rings: Record<Ring, { rx: number; ry: number }>, ring: Ring, an
    copy ever changes; the cards then wait for the subtitle's actual
    onComplete callback. */
 const HEADLINE_TEXT = "Context switching is costing your team 20% of their capacity.";
-const HEADLINE_ENTRANCE_S = (HEADLINE_TEXT.replace(/\s/g, "").length - 1) * 0.04 + 0.6;
-/** Headline end → subtitle start: one short editorial beat. */
-const SUBTITLE_DELAY_S = HEADLINE_ENTRANCE_S + 0.2;
+// Headline char entrance — a touch quicker than SplitText's 40ms/0.6s default.
+const HEADLINE_STAGGER_MS = 30; // per-char stagger (ms)
+const HEADLINE_UNIT_S = 0.55; // per-char duration (s)
+const HEADLINE_CHARS = HEADLINE_TEXT.replace(/\s/g, "").length;
+const HEADLINE_ENTRANCE_S = (HEADLINE_CHARS - 1) * (HEADLINE_STAGGER_MS / 1000) + HEADLINE_UNIT_S;
+/** Subtitle overlaps the TAIL of the headline (~80% through) instead of waiting
+ *  for a full beat after it finishes. */
+const SUBTITLE_DELAY_S = HEADLINE_ENTRANCE_S * 0.8;
 
 const FLOAT_CONFIG = [
   { duration: 4, delay: 0 },
@@ -176,7 +181,7 @@ const layerVariants: Variants = {
   hidden: {},
   // Pronounced one-by-one entrance (runs only after the subtitle completes —
   // see the introDone gate) with a small beat before the first card.
-  enter: { transition: { staggerChildren: 0.2, delayChildren: 0.15 } },
+  enter: { transition: { staggerChildren: 0.12, delayChildren: 0.05 } },
   clean: { transition: { staggerChildren: 0 } },
   chaos: { transition: { staggerChildren: 0.22, delayChildren: 0.15 } },
 };
@@ -307,10 +312,18 @@ export function ContextSwitching() {
 
     (async () => {
       // Gradual staggered entrance for the floating cards (first entry only).
+      // The instant the last card settles, the notifications fire straight away
+      // — no clean-hold, no pause — since the entrance already leaves the cards
+      // logo-only. This shortcut is for the very FIRST reveal only; every later
+      // cycle keeps the calmer clean → pause → chaos rhythm of the loop below.
       if (!hasEnteredRef.current) {
         await cardControls.start("enter");
         if (cancelled) return;
         hasEnteredRef.current = true;
+        await cardControls.start("chaos");
+        if (cancelled) return;
+        await wait(3000);
+        if (cancelled) return;
       }
 
       // Infinite, seamless loop: clean → staggered pop-ups → pause → repeat.
@@ -482,6 +495,8 @@ export function ContextSwitching() {
         <SplitText
           as="h2"
           text={HEADLINE_TEXT}
+          delay={HEADLINE_STAGGER_MS}
+          duration={HEADLINE_UNIT_S}
           className="text-balance text-[34px] font-bold leading-[1.05] tracking-[-0.035em] text-[#1d1d23] sm:text-[44px] md:text-[52px] xl:text-[64px]"
         />
 

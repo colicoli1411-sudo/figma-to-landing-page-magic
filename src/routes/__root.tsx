@@ -107,11 +107,12 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         // site actually uses: Poppins italic only ships 600 (the single
         // `font-semibold italic` accent in the mockups); Instrument Serif
         // powers the italic accent words in section headings; Roboto Flex
-        // powers the footer's variable-width wordmark only — TextPressure
-        // animates just wdth/wght (wdth clamped to ≤151), so opsz and the
-        // extreme axis ranges are dropped.
+        // powers the footer's variable-width wordmark only. TextPressure rests
+        // the wordmark at wght 100 (hairline) and grows it toward 900 on the
+        // pressure wave, so the weight axis MUST include the thin end (100) —
+        // clamping it to 300 killed the "starts thin, then grows" entrance.
         rel: "stylesheet",
-        href: "https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,300;0,400;0,500;0,600;0,700;1,600&family=Instrument+Serif:ital@0;1&family=Roboto+Flex:wdth,wght@60..151,300..900&display=swap",
+        href: "https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,300;0,400;0,500;0,600;0,700;1,600&family=Instrument+Serif:ital@0;1&family=Roboto+Flex:wdth,wght@60..151,100..900&display=swap",
       },
     ],
   }),

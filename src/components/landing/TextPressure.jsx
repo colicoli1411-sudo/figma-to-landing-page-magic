@@ -106,8 +106,13 @@ const TextPressure = ({
 
     if (containerRef.current) {
       const { left, top, width, height } = containerRef.current.getBoundingClientRect();
+      // Rest the wordmark in its THIN state: park the invisible cursor far above
+      // the word (well beyond maxDist) so every glyph sits at the axis minimum
+      // (hairline + narrow) instead of a maxed-out bulge under a centred cursor.
+      // The pressure wave then grows the letters only once the real cursor
+      // actually travels over the wordmark.
       mouseRef.current.x = left + width / 2;
-      mouseRef.current.y = top + height / 2;
+      mouseRef.current.y = top - height * 4;
       if (!useScrollDrive) {
         cursorRef.current.x = mouseRef.current.x;
         cursorRef.current.y = mouseRef.current.y;
@@ -135,6 +140,22 @@ const TextPressure = ({
 
     requestAnimationFrame(() => {
       if (!titleRef.current) return;
+
+      // Width fit — measured in the RESTING (thin) state: the `chars.length / 2`
+      // heuristic assumes ~0.5em glyphs, but real advances vary by typeface (a
+      // 9-glyph "FocusFlow" in Roboto Flex overshoots by ~25% and its tail
+      // clipped). Sum the glyphs' own widths and, if they overflow, shrink the
+      // font so the whole word fits at rest; the pressure wave then grows the
+      // letters outward into the container's faded edges, as designed.
+      const glyphsW = spansRef.current.reduce(
+        (sum, el) => sum + (el ? el.getBoundingClientRect().width : 0),
+        0,
+      );
+      if (glyphsW > containerW && glyphsW > 0) {
+        const fitted = Math.max(minFontSize, (newFontSize * containerW) / glyphsW);
+        setFontSize(fitted);
+      }
+
       const textRect = titleRef.current.getBoundingClientRect();
 
       if (scale && textRect.height > 0) {
@@ -149,6 +170,11 @@ const TextPressure = ({
     const debouncedSetSize = debounce(setSize, 100);
     debouncedSetSize();
     window.addEventListener("resize", debouncedSetSize);
+    // Re-fit once the web font is ready — before that, fallback-font metrics
+    // give a wrong width measurement and the initial fit can be off.
+    if (typeof document !== "undefined" && document.fonts?.ready) {
+      document.fonts.ready.then(() => setSize());
+    }
     return () => window.removeEventListener("resize", debouncedSetSize);
   }, [setSize]);
 
@@ -190,7 +216,10 @@ const TextPressure = ({
           const d = dist(mouseRef.current, charCenter);
 
           const wdth = width ? Math.floor(getAttr(d, maxDist, 60, 200)) : 100;
-          const wght = weight ? Math.floor(getAttr(d, maxDist, 300, 900)) : 400;
+          // Rest weight 100 (hairline) → grows to 900 under the cursor. The font
+          // is loaded with the 100 end of the axis (see __root.tsx) so far/rest
+          // glyphs read genuinely thin, not a medium 300.
+          const wght = weight ? Math.floor(getAttr(d, maxDist, 100, 900)) : 400;
           const italVal = italic ? getAttr(d, maxDist, 0, 1).toFixed(2) : 0;
           const alphaVal = alpha ? getAttr(d, maxDist, 0, 1).toFixed(2) : 1;
 

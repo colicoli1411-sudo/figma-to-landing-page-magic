@@ -1,7 +1,14 @@
 /* Page-load intro overlay — see PageLoader.tsx.
-   Keyframes and timing are lifted verbatim from the "FocusFlow Loading
-   Animation" Claude Design file. The overlay sits above everything (Header
-   z-50, page blur ~z-140/1000) and fades out to reveal the untouched site. */
+   The FocusFlow wordmark opens as a stroke-only outline; its brand-coloured
+   fill rises bottom→top behind a gently undulating wave mask, the word takes a
+   small settling breath, then zooms out as the overlay fades to reveal the
+   site. The overlay sits above everything (Header z-50, page blur ~z-140/1000).
+
+   Timeline (INTRO_REVEAL_MS = 2400, INTRO_TOTAL_MS = 3500 — page-load-intro.ts):
+     0     – 0.45s  word-in: outline fades in with a slight rise
+     0.45  – 2.05s  fill-rise: wavy fill climbs the word
+     2.05  – 2.35s  settle: scale 1 → 1.03 → 1 breath
+     2.4   – 3.5s   word-out zoom + overlay fade (Hero starts at 2.4s) */
 
 .ldr-overlay {
   position: fixed;
@@ -13,211 +20,125 @@
   background: #fafbfd;
   pointer-events: none;
   overflow: hidden;
-  /* 5 · overlay fades out, revealing the site underneath */
-  animation: ldr-overlay-out 1.15s ease 3.7s both;
+  /* overlay fades out, revealing the site underneath */
+  animation: ldr-overlay-out 1.1s ease 2.4s both;
 }
 
-/* 1 · the mark fades in */
-.ldr-mark {
-  position: relative;
-  width: 128px;
-  height: 128px;
-  animation: ldr-mark-in 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
-}
-
-/* 2 · brackets "hunt focus" — autofocus adjusting */
-.ldr-hunt {
-  position: absolute;
-  inset: 0;
-  animation: ldr-hunt 1.6s cubic-bezier(0.45, 0, 0.25, 1) both;
-}
-
-.ldr-corner {
-  position: absolute;
-  width: 34px;
-  height: 34px;
-}
-
-/* 3 · brackets fly out to the page corners */
-.ldr-tl {
-  top: 0;
-  left: 0;
-  border-top: 8px solid #6e56cf;
-  border-left: 8px solid #6e56cf;
-  border-radius: 10px 0 0 0;
-  animation: ldr-fly-tl 0.7s cubic-bezier(0.65, 0, 0.35, 1) 1.55s both;
-}
-.ldr-tr {
-  top: 0;
-  right: 0;
-  border-top: 8px solid #6e56cf;
-  border-right: 8px solid #6e56cf;
-  border-radius: 0 10px 0 0;
-  animation: ldr-fly-tr 0.7s cubic-bezier(0.65, 0, 0.35, 1) 1.55s both;
-}
-.ldr-bl {
-  bottom: 0;
-  left: 0;
-  border-bottom: 8px solid #6e56cf;
-  border-left: 8px solid #6e56cf;
-  border-radius: 0 0 0 10px;
-  animation: ldr-fly-bl 0.7s cubic-bezier(0.65, 0, 0.35, 1) 1.55s both;
-}
-.ldr-br {
-  bottom: 0;
-  right: 0;
-  border-bottom: 8px solid #6e56cf;
-  border-right: 8px solid #6e56cf;
-  border-radius: 0 0 10px 0;
-  animation: ldr-fly-br 0.7s cubic-bezier(0.65, 0, 0.35, 1) 1.55s both;
-}
-
-/* nucleus (matches the "Focus Lock" logo mark — site-black dot): pulses, then
-   bursts into the title */
-.ldr-dot {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 30px;
-  height: 30px;
-  margin: -15px 0 0 -15px;
-  border-radius: 50%;
-  background: #8b79e6;
-  box-shadow: 0 0 24px rgba(139, 121, 230, 0.5);
-  /* GPU layer: the burst (zoom #1) must not drop frames on mobile */
-  will-change: transform, opacity;
-  animation:
-    ldr-dot-pulse 1.55s ease-in-out both,
-    ldr-burst 0.6s cubic-bezier(0.5, 0, 0.75, 0.4) 1.55s both;
-}
-
-/* 4 · wordmark resolves where the dot was — outer wrap only centers so the
-   inner span's animations never override the centering transform */
+/* Outer wrap only centers so the inner span's animations never override the
+   centering transform. Sits slightly ABOVE the vertical centre (46.5%) per the
+   design direction. */
 .ldr-word-wrap {
   position: absolute;
-  top: 50%;
+  top: 46.5%;
   left: 50%;
   transform: translate(-50%, -50%);
 }
+
+/* The word stack: outline layer in flow, fill layer absolutely on top. */
 .ldr-word {
+  position: relative;
   display: inline-block;
   font-family: "Poppins", system-ui, sans-serif;
-  /* Responsive: never overflow a 375px screen */
-  font-size: clamp(38px, 12vw, 58px);
+  /* Responsive: never overflow a 375px screen. ~1.45× the original loader
+     word (58px cap) per the design direction — the wave-fill word is the
+     whole show now, so it carries more presence. */
+  font-size: clamp(46px, 14vw, 84px);
   font-weight: 600;
   letter-spacing: -0.03em;
-  color: #1d1d23;
+  /* Fixed line-height so the fill mask's em-based geometry is predictable. */
+  line-height: 1.2;
   white-space: nowrap;
   transform-origin: center;
-  /* GPU layer: the word-out zoom (zoom #2) must not drop frames on mobile */
+  /* GPU layer: the word-out zoom must not drop frames on mobile */
   will-change: transform, opacity;
   animation:
-    ldr-word-in 1s cubic-bezier(0.22, 1, 0.36, 1) 2.05s both,
-    ldr-word-out 1.1s cubic-bezier(0.65, 0, 0.35, 1) 3.55s forwards;
+    ldr-word-in 0.45s cubic-bezier(0.22, 1, 0.36, 1) both,
+    ldr-settle 0.3s ease-in-out 2.05s forwards,
+    ldr-word-out 1s cubic-bezier(0.65, 0, 0.35, 1) 2.4s forwards;
 }
-.ldr-word-accent {
+
+/* Stroke-only base layer — transparent glyphs. "Focus" is contoured in the
+   site black (matching its fill), "Flow" in brand violet (matching its fill),
+   so each half fills into its own outline colour. */
+.ldr-word-outline {
+  color: transparent;
+  -webkit-text-stroke: 2px rgba(29, 29, 35, 0.45);
+}
+.ldr-word-outline .ldr-word-accent {
+  -webkit-text-stroke-color: rgba(110, 86, 207, 0.45);
+}
+
+/* Brand-coloured fill on top, revealed bottom→top by the wave mask below.
+   The matching text-stroke in currentColor makes the risen fill cover the
+   grey outline exactly (a bare glyph would leave the outer half of the
+   underlying stroke peeking out around the edges). */
+.ldr-word-fill {
+  position: absolute;
+  inset: 0;
+  color: #1d1d23;
+  -webkit-text-stroke: 2px currentColor;
+  /* Wave tile: solid black body with a gentle sine top edge (2 periods per
+     tile, low amplitude). Black = visible. Sized in em so it scales with the
+     clamped font-size; repeat-x tiles the crest seamlessly across the word. */
+  -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 90' preserveAspectRatio='none'%3E%3Cpath d='M0,10 Q15,3 30,10 T60,10 T90,10 T120,10 V90 H0 Z' fill='%23000'/%3E%3C/svg%3E");
+  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 90' preserveAspectRatio='none'%3E%3Cpath d='M0,10 Q15,3 30,10 T60,10 T90,10 T120,10 V90 H0 Z' fill='%23000'/%3E%3C/svg%3E");
+  -webkit-mask-repeat: repeat-x;
+  mask-repeat: repeat-x;
+  -webkit-mask-size: 4em 3em;
+  mask-size: 4em 3em;
+  /* Start fully below the glyphs (nothing filled) — ldr-fill-rise lifts it. */
+  -webkit-mask-position: 0 1.25em;
+  mask-position: 0 1.25em;
+  animation: ldr-fill-rise 1.6s ease-in-out 0.45s both;
+}
+
+/* Scoped to the FILL layer only: in the outline layer the accent span must
+   inherit `color: transparent` so "Flow" starts as stroke-only too (an
+   unscoped rule made it solid violet from frame one). currentColor keeps the
+   fill layer's covering text-stroke violet over the accent. */
+.ldr-word-fill .ldr-word-accent {
   color: #6e56cf;
 }
 
 /* ── keyframes ─────────────────────────────────────────────────────────── */
-@keyframes ldr-mark-in {
-  from {
-    opacity: 0;
-    transform: scale(0.94);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1);
-  }
-}
-
-@keyframes ldr-hunt {
-  0% {
-    transform: scale(1.1);
-  }
-  30% {
-    transform: scale(0.92);
-  }
-  55% {
-    transform: scale(1.05);
-  }
-  80% {
-    transform: scale(0.97);
-  }
-  100% {
-    transform: scale(1);
-  }
-}
-@keyframes ldr-dot-pulse {
-  0%,
-  100% {
-    transform: scale(1);
-  }
-  35% {
-    transform: scale(1.14);
-  }
-  70% {
-    transform: scale(0.94);
-  }
-}
-
-@keyframes ldr-fly-tl {
-  60% {
-    opacity: 1;
-  }
-  100% {
-    transform: translate(-56vw, -56vh);
-    opacity: 0;
-  }
-}
-@keyframes ldr-fly-tr {
-  60% {
-    opacity: 1;
-  }
-  100% {
-    transform: translate(56vw, -56vh);
-    opacity: 0;
-  }
-}
-@keyframes ldr-fly-bl {
-  60% {
-    opacity: 1;
-  }
-  100% {
-    transform: translate(-56vw, 56vh);
-    opacity: 0;
-  }
-}
-@keyframes ldr-fly-br {
-  60% {
-    opacity: 1;
-  }
-  100% {
-    transform: translate(56vw, 56vh);
-    opacity: 0;
-  }
-}
-
-@keyframes ldr-burst {
-  to {
-    transform: scale(9);
-    opacity: 0;
-  }
-}
 @keyframes ldr-word-in {
   from {
     opacity: 0;
-    transform: translateY(8px);
-    letter-spacing: 0.04em;
-    filter: blur(4px);
+    transform: translateY(10px);
   }
   to {
     opacity: 1;
     transform: translateY(0);
-    letter-spacing: -0.03em;
-    filter: blur(0px);
   }
 }
+
+/* The mask climbs (y: below the glyphs → above cap height) while drifting
+   sideways (x) — the diagonal travel is what makes the crest undulate as it
+   rises. 3em drift = 1.5 wave periods over the climb. */
+@keyframes ldr-fill-rise {
+  from {
+    -webkit-mask-position: 0 1.25em;
+    mask-position: 0 1.25em;
+  }
+  to {
+    -webkit-mask-position: 3em -0.6em;
+    mask-position: 3em -0.6em;
+  }
+}
+
+/* Small settling breath once the fill completes, before the zoom-out. */
+@keyframes ldr-settle {
+  0% {
+    transform: scale(1);
+  }
+  45% {
+    transform: scale(1.03);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
 @keyframes ldr-word-out {
   to {
     opacity: 0;
@@ -235,23 +156,10 @@
   }
 }
 
-/* ── mobile: same choreography, blur-free zooms ────────────────────────────
+/* ── mobile: same choreography, blur-free zoom ─────────────────────────────
    Animating `filter: blur` simultaneously with a large scale makes mobile
-   browsers drop the frames of zoom #2 (the word-out), so it read as a plain
-   fade — "one zoom instead of two". Mobile gets blur-free keyframes and a
-   slightly tighter word-out scale so both zooms render clearly. */
-@keyframes ldr-word-in-mobile {
-  from {
-    opacity: 0;
-    transform: translateY(8px);
-    letter-spacing: 0.04em;
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-    letter-spacing: -0.03em;
-  }
-}
+   browsers drop the zoom's frames, so it read as a plain fade. Mobile gets a
+   blur-free word-out with a slightly tighter scale so the zoom renders. */
 @keyframes ldr-word-out-mobile {
   to {
     opacity: 0;
@@ -261,8 +169,9 @@
 @media (max-width: 768px) {
   .ldr-word {
     animation:
-      ldr-word-in-mobile 1s cubic-bezier(0.22, 1, 0.36, 1) 2.05s both,
-      ldr-word-out-mobile 1.1s cubic-bezier(0.65, 0, 0.35, 1) 3.55s forwards;
+      ldr-word-in 0.45s cubic-bezier(0.22, 1, 0.36, 1) both,
+      ldr-settle 0.3s ease-in-out 2.05s forwards,
+      ldr-word-out-mobile 1s cubic-bezier(0.65, 0, 0.35, 1) 2.4s forwards;
   }
 }
 
@@ -270,14 +179,8 @@
    overlay is torn down immediately by PageLoader, so no animation is needed. */
 @media (prefers-reduced-motion: reduce) {
   .ldr-overlay,
-  .ldr-mark,
-  .ldr-hunt,
-  .ldr-tl,
-  .ldr-tr,
-  .ldr-bl,
-  .ldr-br,
-  .ldr-dot,
-  .ldr-word {
+  .ldr-word,
+  .ldr-word-fill {
     animation: none !important;
   }
 }

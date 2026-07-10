@@ -1,18 +1,15 @@
 import { useEffect, useState } from "react";
-import {
-  INTRO_REVEAL_MS,
-  INTRO_TOTAL_MS,
-  revealIntro,
-} from "@/lib/page-load-intro";
+import { INTRO_REVEAL_MS, INTRO_TOTAL_MS, revealIntro } from "@/lib/page-load-intro";
 import "./PageLoader.css";
 
 /**
- * Full-screen page-load intro overlay (re-implemented from the "FocusFlow
- * Loading Animation" design). The brackets hunt focus, fly to the corners, the
- * violet nucleus bursts into the wordmark, then the overlay fades to reveal the
- * untouched site — with the Hero entrance timed to play into the reveal (see
- * `@/lib/page-load-intro`). Pure-CSS animation; this component only schedules
- * the reveal hand-off and unmounts itself when the run finishes.
+ * Full-screen page-load intro overlay. The FocusFlow wordmark appears as a
+ * stroke-only outline, then its brand-coloured fill rises bottom-to-top with a
+ * gentle wave crest, the word takes a small settling breath, and finally zooms
+ * out as the overlay fades to reveal the untouched site — with the Hero
+ * entrance timed to play into the reveal (see `@/lib/page-load-intro`).
+ * Pure-CSS animation; this component only schedules the reveal hand-off and
+ * unmounts itself when the run finishes.
  */
 
 // Plays exactly once per full document load; flipped after the first run so a
@@ -66,21 +63,16 @@ export function PageLoader() {
 
   return (
     <div className="ldr-overlay" aria-hidden="true">
-      {/* the mark: brackets hunt focus, then fly out */}
-      <div className="ldr-mark">
-        <div className="ldr-hunt">
-          <span className="ldr-corner ldr-tl" />
-          <span className="ldr-corner ldr-tr" />
-          <span className="ldr-corner ldr-bl" />
-          <span className="ldr-corner ldr-br" />
-        </div>
-        <div className="ldr-dot" />
-      </div>
-
-      {/* wordmark resolves where the dot was */}
+      {/* Two stacked copies of the word: a stroke-only outline below, and the
+          brand-coloured fill above it, revealed bottom→top by a wavy mask. */}
       <div className="ldr-word-wrap">
         <span className="ldr-word">
-          Focus<span className="ldr-word-accent">Flow</span>
+          <span className="ldr-word-outline">
+            Focus<span className="ldr-word-accent">Flow</span>
+          </span>
+          <span className="ldr-word-fill">
+            Focus<span className="ldr-word-accent">Flow</span>
+          </span>
         </span>
       </div>
     </div>

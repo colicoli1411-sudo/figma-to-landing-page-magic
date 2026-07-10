@@ -4,10 +4,12 @@
 // component effect runs: Hero's `useLayoutEffect` fires before PageLoader's
 // passive effect, so an effect-based handshake would race.
 
-/** Overlay begins fading out → the site emerges. Hero should start here. */
-export const INTRO_REVEAL_MS = 3700;
+/** Overlay begins fading out → the site emerges. Hero should start here.
+ *  (Wave-fill loader: word-in 0.45s → fill rises to ~2.05s → settle pulse →
+ *  reveal at 2.4s.) */
+export const INTRO_REVEAL_MS = 2400;
 /** Overlay is fully gone → PageLoader unmounts. */
-export const INTRO_TOTAL_MS = 4900;
+export const INTRO_TOTAL_MS = 3500;
 
 const isBrowser = typeof window !== "undefined";
 
