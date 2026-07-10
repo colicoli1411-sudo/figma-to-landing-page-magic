@@ -107,7 +107,13 @@ function SharedDotsGroup({ children }: { children: ReactNode }) {
           waveAmplitude={0}
           cursorRadius={0}
           cursorForce={0}
+          // Uniform dot colour: DotField's default gradientTo is a 25%-alpha
+          // lavender, and across a canvas this tall (several sections) the
+          // diagonal fade left the lower sections' dots nearly invisible.
+          // Locking both stops to the brand violet keeps every dot as
+          // dominant as the ones at the top of the hero.
           gradientFrom="#6E56CF"
+          gradientTo="#6E56CF"
           glowColor="#fcfbff"
         />
       </div>
