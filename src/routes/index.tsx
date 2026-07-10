@@ -109,7 +109,10 @@ function SharedDotsGroup({ children }: { children: ReactNode }) {
         aria-hidden
         className="pointer-events-none absolute inset-0"
         style={{
-          backgroundImage: "radial-gradient(circle, #6E56CF 0.75px, transparent 1px)",
+          // Tiny solid core + soft falloff mimics the old DotField canvas's
+          // anti-aliased 0.75px dot (a full-opacity 0.75px disc read too bold).
+          // Same geometry/spacing/uniform violet as the canvas — just softer.
+          backgroundImage: "radial-gradient(circle, #6E56CF 0.4px, transparent 1px)",
           backgroundSize: "15.5px 15.5px",
         }}
       />

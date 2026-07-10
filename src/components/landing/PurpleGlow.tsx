@@ -18,35 +18,36 @@ export function PurpleGlow() {
   return (
     <div aria-hidden className="pointer-events-none absolute inset-0">
       {/* Top glow — behind the headline.
-          Mobile uses its own compact, viewport-relative box: the desktop
-          1900px width is ~5× a 375px phone, so the fixed-px washes spilled
-          far past the (much shorter) mobile hero. These smaller boxes keep
-          desktop's ~1.3× viewport-width coverage proportion but stay
-          centered inside the hero. */}
+          On mobile this single div carries the WHOLE purple wash: on desktop
+          the top + bottom glows blur-merge into one continuous cloud, but
+          without blur (see note above) two separate mobile blobs read as two
+          distinct bubbles. So mobile renders one tall wash — colour rises to
+          ~the sub-headline top and fades to fully white by ~3/4 of the
+          mockup — and the bottom-glow div below is hidden on mobile. */}
       <div
         className={`absolute left-1/2 -translate-x-1/2 opacity-70 ${
-          isMobile ? "top-[60px] h-[520px] w-[460px]" : "top-[280px] h-[720px] w-[1900px] blur-[120px]"
+          isMobile ? "top-[240px] h-[880px] w-[540px]" : "top-[280px] h-[720px] w-[1900px] blur-[120px]"
         }`}
         style={{
           background: isMobile
-            ? "radial-gradient(ellipse 62% 62% at 50% 50%, rgba(139, 121, 230, 0.55) 0%, rgba(110, 86, 207, 0.25) 38%, rgba(110, 86, 207, 0) 72%)"
+            ? "radial-gradient(ellipse 55% 62% at 50% 49%, rgba(139, 121, 230, 0.55) 0%, rgba(110, 86, 207, 0.28) 40%, rgba(110, 86, 207, 0) 76%)"
             : "radial-gradient(ellipse 50% 50% at 50% 50%, rgba(139, 121, 230, 0.55) 0%, rgba(110, 86, 207, 0.25) 35%, rgba(110, 86, 207, 0) 70%)",
         }}
       />
       {/* Bottom mirrored glow — behind the mockup. Strengthened so the mockup's
           own bottom fade-mask reveals this purple wash instead of the plain
           page background (a mask's gradient only ever affects alpha, never
-          hue, so the "colour" of a fade has to come from what sits behind it). */}
-      <div
-        className={`absolute left-1/2 -translate-x-1/2 opacity-80 ${
-          isMobile ? "top-[540px] h-[520px] w-[520px]" : "top-[880px] h-[660px] w-[1900px] blur-[140px]"
-        }`}
-        style={{
-          background: isMobile
-            ? "radial-gradient(ellipse 70% 70% at 50% 50%, rgba(139, 121, 230, 0.6) 0%, rgba(110, 86, 207, 0.32) 42%, rgba(110, 86, 207, 0) 78%)"
-            : "radial-gradient(ellipse 55% 55% at 50% 50%, rgba(139, 121, 230, 0.6) 0%, rgba(110, 86, 207, 0.32) 40%, rgba(110, 86, 207, 0) 75%)",
-        }}
-      />
+          hue, so the "colour" of a fade has to come from what sits behind it).
+          Desktop-only: on mobile the single wash above covers the mockup band. */}
+      {!isMobile && (
+        <div
+          className="absolute left-1/2 top-[880px] h-[660px] w-[1900px] -translate-x-1/2 opacity-80 blur-[140px]"
+          style={{
+            background:
+              "radial-gradient(ellipse 55% 55% at 50% 50%, rgba(139, 121, 230, 0.6) 0%, rgba(110, 86, 207, 0.32) 40%, rgba(110, 86, 207, 0) 75%)",
+          }}
+        />
+      )}
       {/* Mint-green counter-tone — soft Apple-style accent paired with the dominant
           violet. Sits bottom-left of the mockup band so it reads mint on the
           bottom/left, violet on the right. */}

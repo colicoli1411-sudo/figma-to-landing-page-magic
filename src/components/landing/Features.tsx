@@ -158,17 +158,19 @@ export function Features() {
       className="relative overflow-hidden"
     >
       <div ref={innerRef} className="relative w-full py-24 md:py-32">
-        {/* Violet gradient wash — faded to transparent at the top/bottom edges so it
-          dissolves into the neighbouring sections instead of cutting against them. */}
+        {/* Violet gradient wash — fully opaque from the very first pixel so the
+          shared dot field can never show through while scrolling this section;
+          it starts at the page base colour (#F8F9FB), so the section boundary
+          stays seamless even without a top fade. */}
         <div
           className="pointer-events-none absolute inset-0"
           style={{
             background:
               "linear-gradient(170deg, #F8F9FB 0%, #F3F0FC 25%, #EDE8FA 50%, #F3F0FC 75%, #F8F9FB 100%)",
             WebkitMaskImage:
-              "linear-gradient(to bottom, transparent 0%, black 18%, black 92%, transparent 100%)",
+              "linear-gradient(to bottom, black 0%, black 92%, transparent 100%)",
             maskImage:
-              "linear-gradient(to bottom, transparent 0%, black 18%, black 92%, transparent 100%)",
+              "linear-gradient(to bottom, black 0%, black 92%, transparent 100%)",
           }}
         />
         {/* Aurora layers — edge-masked as a group so the blurred blobs dissolve

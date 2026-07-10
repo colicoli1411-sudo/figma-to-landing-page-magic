@@ -18,7 +18,7 @@ type FloatingApp = {
   name: string;
   Icon: ComponentType<SVGProps<SVGSVGElement>>;
   // Desktop-only placement: which ellipse the card rides + its math-angle
-  // (0° = right, counter-clockwise, y-up). See RINGS / cardPos below.
+  // (0° = right, counter-clockwise, y-up). See ringsFor / cardPos below.
   ring: Ring;
   angle: number;
   color: string;
@@ -102,21 +102,27 @@ const APPS: FloatingApp[] = [
    outlines use the identical values, so lines, dots and cards stay locked
    together at any viewport aspect. Both rings share ONE aspect ratio so they
    read as a uniform concentric pair:
-   - inner (rx 37): the widest the mid pair (at 180°/0°) can sit without
-     clipping the frame edge at a 1024px viewport.
-   - outer (rx 44): the widest the diagonal corner cards can ride without
-     clipping at 1024 (~35px margin). */
+   - inner: hugs the centre copy — pulled in from the original 37 to rx 34 so
+     the mid pair (at 180°/0°) reads as orbiting the text. Measured against
+     the headline's actual glyph boxes, 34 is clear from 1280 up (verified to
+     1920) but overlaps the type by ~19px at a 1024 viewport — so the narrow
+     desktop band (1024–1279) keeps the original 37 (see innerRx in the
+     component).
+   - outer (rx 46): pushed slightly out for breathing room; the diagonal
+     corner cards still clear the frame edge at a 1024px viewport. */
 const RING_ASPECT = 46 / 44; // shared ry:rx — identical proportions on all rings
-const RING_RX: Record<Ring, number> = { outer: 44, inner: 37 };
-const RINGS: Record<Ring, { rx: number; ry: number }> = {
-  outer: { rx: RING_RX.outer, ry: RING_RX.outer * RING_ASPECT },
-  inner: { rx: RING_RX.inner, ry: RING_RX.inner * RING_ASPECT },
-};
+const INNER_RX_TIGHT = 34; // ≥1280px — close to the copy
+const INNER_RX_NARROW = 37; // 1024–1279px — the pre-tighten value, glyph-safe
+const OUTER_RX = 46;
+const ringsFor = (innerRx: number): Record<Ring, { rx: number; ry: number }> => ({
+  outer: { rx: OUTER_RX, ry: OUTER_RX * RING_ASPECT },
+  inner: { rx: innerRx, ry: innerRx * RING_ASPECT },
+});
 
-/* Decorative echo rings — continue the same 7-step rhythm and aspect outward
+/* Decorative echo rings — continue the same 12-step rhythm and aspect outward
    past the card rings, fading as they go (0.24 → 0.15 → 0.08) until they crop
    at the screen edges. Pure atmosphere: no cards, no dots. */
-const DECOR_RINGS = [51, 58, 65].map((rx, i) => ({
+const DECOR_RINGS = [58, 70, 82].map((rx, i) => ({
   rx,
   ry: rx * RING_ASPECT,
   opacity: [0.24, 0.15, 0.08][i],
@@ -127,14 +133,29 @@ const DECOR_RINGS = [51, 58, 65].map((rx, i) => ({
  *  downward, so sin is negated). The point lies exactly on the matching
  *  <ellipse>. Rounded to a fixed precision so the SSR and client strings match
  *  exactly (raw float stringification differs and trips React hydration). */
-function cardPos({ ring, angle }: { ring: Ring; angle: number }) {
-  const { rx, ry } = RINGS[ring];
+function cardPos(rings: Record<Ring, { rx: number; ry: number }>, ring: Ring, angle: number) {
+  const { rx, ry } = rings[ring];
   const rad = (angle * Math.PI) / 180;
   return {
     left: `${(50 + rx * Math.cos(rad)).toFixed(3)}%`,
     top: `${(50 - ry * Math.sin(rad)).toFixed(3)}%`,
   };
 }
+
+/* ── Entrance choreography ─────────────────────────────────────────────────
+   The section reveals in a strict sequence on every screen size:
+     1. headline types in char-by-char (SplitText split mode),
+     2. a short beat, then the subtitle fades up,
+     3. only once the subtitle has finished do the app cards pop in,
+        one after another.
+   The subtitle's delay is DERIVED from the headline text + SplitText's
+   defaults (40ms stagger, 0.6s per char) so the hand-off stays exact if the
+   copy ever changes; the cards then wait for the subtitle's actual
+   onComplete callback. */
+const HEADLINE_TEXT = "Context switching is costing your team 20% of their capacity.";
+const HEADLINE_ENTRANCE_S = (HEADLINE_TEXT.replace(/\s/g, "").length - 1) * 0.04 + 0.6;
+/** Headline end → subtitle start: one short editorial beat. */
+const SUBTITLE_DELAY_S = HEADLINE_ENTRANCE_S + 0.2;
 
 const FLOAT_CONFIG = [
   { duration: 4, delay: 0 },
@@ -153,7 +174,9 @@ const FLOAT_CONFIG = [
 
 const layerVariants: Variants = {
   hidden: {},
-  enter: { transition: { staggerChildren: 0.1, delayChildren: 0.05 } },
+  // Pronounced one-by-one entrance (runs only after the subtitle completes —
+  // see the introDone gate) with a small beat before the first card.
+  enter: { transition: { staggerChildren: 0.2, delayChildren: 0.15 } },
   clean: { transition: { staggerChildren: 0 } },
   chaos: { transition: { staggerChildren: 0.22, delayChildren: 0.15 } },
 };
@@ -203,6 +226,24 @@ export function ContextSwitching() {
   // active layer stays, dropping the hidden one's 6 backdrop-blurred,
   // infinitely-floating cards from the tree.
   const [cardLayer, setCardLayer] = useState<"both" | "desktop" | "mobile">("both");
+  // Inner-ring tightness: 34 hugs the copy from 1280 up; the narrow desktop
+  // band (1024–1279) keeps the glyph-safe 37 (see the ring constants above).
+  // SSR/first paint assumes wide (the common case) — the cards are still
+  // hidden pre-entrance, so the post-mount correction can't be seen.
+  const [xlUp, setXlUp] = useState(true);
+  // Gate for the cards' entrance: flips true when the subtitle's reveal
+  // finishes (headline → beat → subtitle → cards). GSAP tweens keep playing
+  // even if the user scrolls away mid-sequence, so this always resolves.
+  const [introDone, setIntroDone] = useState(false);
+
+  useEffect(() => {
+    // Reduced motion: SplitText skips its tweens entirely, so the subtitle's
+    // onComplete never fires — release the gate immediately instead of
+    // leaving the cards stuck in their hidden state.
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      setIntroDone(true);
+    }
+  }, []);
 
   useEffect(() => {
     const mql = window.matchMedia("(min-width: 1024px)");
@@ -213,8 +254,20 @@ export function ContextSwitching() {
   }, []);
 
   useEffect(() => {
+    const mql = window.matchMedia("(min-width: 1280px)");
+    const apply = () => setXlUp(mql.matches);
+    apply();
+    mql.addEventListener("change", apply);
+    return () => mql.removeEventListener("change", apply);
+  }, []);
+
+  const rings = ringsFor(xlUp ? INNER_RX_TIGHT : INNER_RX_NARROW);
+
+  useEffect(() => {
     // Out of view → just stop the loop (via cleanup); cards stay visible.
-    if (!inView) return;
+    // Before introDone → hold the cards hidden until the headline + subtitle
+    // sequence has fully played (introDone flips even if we scroll away).
+    if (!inView || !introDone) return;
     let cancelled = false;
     const wait = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
 
@@ -248,7 +301,7 @@ export function ContextSwitching() {
     return () => {
       cancelled = true;
     };
-  }, [inView, cardControls]);
+  }, [inView, introDone, cardControls]);
 
   return (
     <section
@@ -353,8 +406,8 @@ export function ContextSwitching() {
               <ellipse
                 cx="50"
                 cy="50"
-                rx={RINGS.outer.rx}
-                ry={RINGS.outer.ry}
+                rx={rings.outer.rx}
+                ry={rings.outer.ry}
                 stroke="#6E56CF"
                 strokeOpacity={0.35}
                 strokeWidth={1.2}
@@ -363,8 +416,8 @@ export function ContextSwitching() {
               <ellipse
                 cx="50"
                 cy="50"
-                rx={RINGS.inner.rx}
-                ry={RINGS.inner.ry}
+                rx={rings.inner.rx}
+                ry={rings.inner.ry}
                 stroke="#6E56CF"
                 strokeOpacity={0.35}
                 strokeWidth={1.2}
@@ -386,7 +439,7 @@ export function ContextSwitching() {
           variants={layerVariants}
         >
           {APPS.map((app, i) => {
-            const { left, top } = cardPos(app);
+            const { left, top } = cardPos(rings, app.ring, app.angle);
             // Pin direction: the card always hangs off the line AWAY from the
             // centre copy — above its dot on the top half of the ring, below
             // it on the bottom half — so it never drifts toward the text.
@@ -423,14 +476,18 @@ export function ContextSwitching() {
       <div className="relative z-10 mx-auto flex max-w-[760px] flex-col items-center gap-6 text-center lg:max-w-[640px] xl:max-w-[860px]">
         <SplitText
           as="h2"
-          text="Context switching is costing your team 20% of their capacity."
+          text={HEADLINE_TEXT}
           className="text-balance text-[34px] font-bold leading-[1.05] tracking-[-0.035em] text-[#1d1d23] sm:text-[44px] md:text-[52px] xl:text-[64px]"
         />
 
+        {/* Starts only after the headline's char entrance ends (+0.2s beat);
+            its onComplete releases the cards below. */}
         <SplitText
           as="p"
           text="Every time a developer is interrupted by a ping, it takes 23 minutes to recover. FocusFlow auto-mutes your team's biggest distractions so you can actually get work done."
           reveal
+          revealDelay={SUBTITLE_DELAY_S}
+          onComplete={() => setIntroDone(true)}
           className="max-w-[640px] text-[15px] font-light leading-relaxed tracking-[-0.01em] text-[#6b7280] sm:text-[16px] lg:max-w-[520px] xl:max-w-[640px]"
         />
       </div>
