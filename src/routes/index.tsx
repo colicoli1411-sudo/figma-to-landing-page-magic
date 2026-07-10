@@ -111,8 +111,9 @@ function SharedDotsGroup({ children }: { children: ReactNode }) {
         style={{
           // Tiny solid core + soft falloff mimics the old DotField canvas's
           // anti-aliased 0.75px dot (a full-opacity 0.75px disc read too bold).
-          // Same geometry/spacing/uniform violet as the canvas — just softer.
-          backgroundImage: "radial-gradient(circle, #6E56CF 0.4px, transparent 1px)",
+          // Same geometry/spacing/uniform violet as the canvas — dialled back
+          // to 70% alpha so the field reads as a quiet texture, not a grid.
+          backgroundImage: "radial-gradient(circle, rgba(110, 86, 207, 0.7) 0.4px, transparent 1px)",
           backgroundSize: "15.5px 15.5px",
         }}
       />

@@ -68,23 +68,26 @@ const DROPDOWN_TASKS = [
 const PICKED_TASK = DROPDOWN_TASKS[0];
 
 /* Team statuses (indices = [Avi, Sarah, Marcus, Emma, James, Olivia]). Reset
-   baseline (deterministic → SSR-safe), chosen so every member's flip is visible
-   when the session starts:
-     - first three enter focus (available → deep-work), staggered one-by-one
+   baseline (deterministic, hand-picked → SSR-safe), chosen so every member's
+   flip is visible when the session starts and the first three — the only ones
+   visible on mobile — stay varied at both ends (no monotone all-deep-work):
+     - Avi enters focus (available → deep-work)
+     - Sarah comes back from her break (break → available)
+     - Marcus wraps his own session (deep-work → break)
      - last three flip: Emma break→available, James available→break, Olivia break→available
    The reduced-motion fallback jumps straight to the session-active end state. */
 const INITIAL_STATUSES: Status[] = [
   "available", // Avi (You)
-  "available", // Sarah Chen
-  "available", // Marcus Rodriguez
+  "break", // Sarah Chen
+  "deep-work", // Marcus Rodriguez
   "break", // Emma Wilson
   "available", // James Park
   "break", // Olivia Martinez
 ];
 const FOCUS_STATUSES: Status[] = [
   "deep-work", // Avi (You)
-  "deep-work", // Sarah Chen
-  "deep-work", // Marcus Rodriguez
+  "available", // Sarah Chen
+  "break", // Marcus Rodriguez
   "available", // Emma Wilson
   "break", // James Park
   "available", // Olivia Martinez
@@ -355,7 +358,7 @@ export function HeroMockup({
         anims.push(animate(cursorOpacity, 0, { duration: 0.3 })); // hand off, fade out
 
         // ── Fast-forward the timer to 0:00 (ring drains) + team status flips ─
-        // First three enter focus one-by-one, then the last three flip.
+        // Members flip to their session statuses one-by-one, top to bottom.
         const RUN = 2.2;
         anims.push(animate(seconds, 0, { duration: RUN, ease: "easeIn" }));
         anims.push(animate(progress, 0, { duration: RUN, ease: "easeIn" }));
@@ -1212,14 +1215,14 @@ function DailyStatsCard() {
             <span key={t}>{t}</span>
           ))}
         </div>
-        <div className="flex flex-1 items-end justify-between gap-3 border-l border-[#e5e7eb] pl-3">
+        <div className="flex flex-1 items-end justify-between gap-1.5 border-l border-[#e5e7eb] pl-3 md:gap-3">
           {days.map((d) => (
             <div
               key={d.label}
               className="flex flex-1 flex-col items-center gap-1.5"
             >
               <div
-                className="w-full rounded-t-md"
+                className="w-full rounded-t-[3px] md:rounded-t-md"
                 style={{
                   height: `${d.value * 120}px`,
                   background:

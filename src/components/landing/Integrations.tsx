@@ -15,10 +15,6 @@ const integrationLogos = [
   { node: <span className={iconClass}><SiGmail /></span>, title: "Gmail" },
 ];
 
-// Second mobile row starts from a different logo (rotated by half) so the two
-// rows never show the same icon at the same column.
-const rotatedLogos = [...integrationLogos.slice(3), ...integrationLogos.slice(0, 3)];
-
 /**
  * A quiet, supporting "works with your tools" strip. NOT a standalone section —
  * it's rendered inside the ROI calculator section as a footer beat, so the logos
@@ -44,22 +40,13 @@ export function IntegrationStrip() {
         />
       </div>
 
-      {/* Mobile only: two rows with opposite start points + opposite directions,
-          so each row shows different logos in parallel on the narrow screen. */}
-      <div className="flex flex-col gap-5 sm:hidden">
+      {/* Mobile only: same marquee, single row — tighter gap and slightly
+          smaller logos to suit the narrow screen. */}
+      <div className="sm:hidden">
         <LogoLoop
           logos={integrationLogos}
           speed={22}
           direction="left"
-          gap={56}
-          logoHeight={26}
-          fadeOut={true}
-          pauseOnHover={true}
-        />
-        <LogoLoop
-          logos={rotatedLogos}
-          speed={22}
-          direction="right"
           gap={56}
           logoHeight={26}
           fadeOut={true}

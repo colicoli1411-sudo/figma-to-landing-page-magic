@@ -242,9 +242,14 @@ export function RoiCalculator() {
                 staying visually quiet next to the adjustable sliders. */}
                 <div className="border-t border-black/5 pt-5">
                   <div className="flex items-baseline justify-between gap-3">
-                    <span className="flex items-center gap-1.5 text-[14px] font-medium text-[#4b5563]">
-                      Capacity lost to context-switching
-                      <Info className="h-3.5 w-3.5 text-[#4b5563]/40" strokeWidth={2} />
+                    <span className="inline-flex items-start gap-1.5 text-[14px] font-medium text-[#4b5563]">
+                      <span>Capacity lost to context-switching</span>
+                      {/* mt matches half the leading so the glyph rides the first
+                          line when the label wraps on narrow screens */}
+                      <Info
+                        className="mt-[3px] h-3.5 w-3.5 shrink-0 text-[#4b5563]/40"
+                        strokeWidth={2}
+                      />
                     </span>
                     <span className="text-[15px] font-bold tabular-nums text-[#1d1d23]">
                       {CAPACITY_LOST_PCT}%

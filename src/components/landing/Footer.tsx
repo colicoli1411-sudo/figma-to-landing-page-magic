@@ -161,8 +161,8 @@ export function Footer() {
         </div>
 
         {/* BOTTOM BAR */}
-        <div className="flex flex-col-reverse items-start justify-between gap-6 border-t border-white/10 pt-8 md:flex-row md:items-center">
-          <div className="flex flex-col gap-2 text-xs text-white/50 sm:flex-row sm:items-center sm:gap-6">
+        <div className="flex flex-col-reverse items-start justify-between gap-5 border-t border-white/10 pt-6 md:flex-row md:items-center md:gap-6 md:pt-8">
+          <div className="flex flex-row flex-wrap items-center gap-x-4 gap-y-2 text-xs text-white/50 sm:gap-x-6">
             <span>© {new Date().getFullYear()} FocusFlow Labs, Inc.</span>
             <a href="#" className="hover:text-white/80">
               Privacy
