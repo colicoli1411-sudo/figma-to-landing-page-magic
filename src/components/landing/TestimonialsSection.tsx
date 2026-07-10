@@ -127,13 +127,15 @@ function TestimonialCard({ t, isActive }: { t: Testimonial; isActive?: boolean }
     >
       {isActive && (
         <>
-          {/* Aurora bloom — soft lavender light radiating from the top, fading into a gentle diagonal wash */}
+          {/* Aurora bloom — a soft, subtle lavender light rising from the bottom
+              of the card (its own gentle gradient, so the section's backdrop stays
+              behind it). */}
           <div
             aria-hidden
             className="pointer-events-none absolute inset-0 rounded-[32px]"
             style={{
               background:
-                "radial-gradient(120% 85% at 50% -12%, rgba(215,207,249,0.55) 0%, rgba(237,233,254,0.30) 34%, rgba(255,255,255,0) 68%), linear-gradient(135deg, rgba(245,243,255,0.65) 0%, rgba(237,233,254,0.32) 46%, rgba(224,231,255,0.48) 100%)",
+                "radial-gradient(115% 75% at 50% 118%, rgba(215,207,249,0.42) 0%, rgba(237,233,254,0.18) 40%, rgba(255,255,255,0) 74%)",
             }}
           />
           {/* Rotating mint→violet conic border glow on the focal card — the same
@@ -613,14 +615,13 @@ export function TestimonialsSection() {
       // band (z-40) so the focal testimonial cards stay crisp; still below the
       // header (z-50). The ambient bottom-blur keeps working on other sections.
       className="relative z-[45] w-full py-24 md:py-32 overflow-hidden"
-      style={{ backgroundColor: "#F8F9FB" }}
     >
       {/* Violet/mint tint — separate edge-masked layer over the plain base, so
           the tint breathes in from the edges instead of starting on a hard line
           against the clean #F8F9FB of the neighbouring sections. */}
       <div
         aria-hidden
-        className="pointer-events-none absolute inset-0"
+        className="pointer-events-none absolute inset-0 -z-10"
         style={{
           background:
             "radial-gradient(ellipse at top, rgba(110, 86, 207, 0.14) 0%, rgba(135, 212, 196, 0.12) 42%, rgba(248, 249, 251, 0) 78%)",

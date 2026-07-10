@@ -241,6 +241,14 @@ const DotField = memo(({
 
     doResize();
     window.addEventListener('resize', resize);
+    // The container's height can change without a window resize — lazy-loaded
+    // sections mounting inside a shared group, or GSAP's pin-spacer growing the
+    // page — so track the parent element itself and rebuild the grid to match.
+    let resizeObserver = null;
+    if (typeof ResizeObserver !== 'undefined') {
+      resizeObserver = new ResizeObserver(resize);
+      resizeObserver.observe(canvas.parentElement);
+    }
     if (!staticRef.current) {
       window.addEventListener('mousemove', onMouseMove, { passive: true });
       rafRef.current = requestAnimationFrame(tick);
@@ -260,6 +268,7 @@ const DotField = memo(({
       clearTimeout(resizeTimer);
       window.removeEventListener('resize', resize);
       window.removeEventListener('mousemove', onMouseMove);
+      resizeObserver?.disconnect();
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);

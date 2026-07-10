@@ -61,7 +61,6 @@ export function ContactSection() {
     <section
       id="contact"
       className="relative w-full overflow-x-clip px-4 py-24 sm:px-6 md:py-32"
-      style={{ backgroundColor: "#F8F9FB" }}
     >
       {/* Ambient violet + sky glows on the light area around the card — keep the
           page-wide colour flow continuous from the FAQ above. Subtle, edge-fading. */}

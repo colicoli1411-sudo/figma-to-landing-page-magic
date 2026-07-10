@@ -89,6 +89,33 @@ function LazySection({ minHeight, children }: { minHeight: number; children: Rea
   );
 }
 
+/** A single dot-field + #F8F9FB base shared behind a run of sections, so the
+ *  dots read as one continuous field across their boundaries instead of each
+ *  section being individually dotted-or-not. Full-strength to every edge (no
+ *  fade), so the dots meet the neighbouring sections without a blank/white gap —
+ *  neighbours are either dark (Pricing) or carry their own gradient (Features). */
+function SharedDotsGroup({ children }: { children: ReactNode }) {
+  return (
+    <div className="relative" style={{ backgroundColor: "#F8F9FB" }}>
+      <div aria-hidden className="pointer-events-none absolute inset-0">
+        <DotField
+          dotRadius={1.5}
+          dotSpacing={14}
+          bulgeStrength={0}
+          glowRadius={0}
+          sparkle={false}
+          waveAmplitude={0}
+          cursorRadius={0}
+          cursorForce={0}
+          gradientFrom="#6E56CF"
+          glowColor="#fcfbff"
+        />
+      </div>
+      {children}
+    </div>
+  );
+}
+
 function Index() {
   // Web fonts (Poppins / Instrument Serif) and late-loading images/mockups shift
   // the layout AFTER each section's ScrollTrigger has already measured its start
@@ -125,47 +152,37 @@ function Index() {
           exposed correctly to assistive tech. */}
       <Header />
       <main id="main-content">
-        {/* Shared dotted background spanning Hero + ContextSwitching so the
-            dots read as one continuous field across the section boundary
-            (both sections are transparent and paint above this layer). */}
-        <div className="relative" style={{ backgroundColor: "#F8F9FB" }}>
-          <div aria-hidden className="pointer-events-none absolute inset-0">
-            <DotField
-              dotRadius={1.5}
-              dotSpacing={14}
-              bulgeStrength={0}
-              glowRadius={0}
-              sparkle={false}
-              waveAmplitude={0}
-              cursorRadius={0}
-              cursorForce={0}
-              gradientFrom="#6E56CF"
-              glowColor="#fcfbff"
-            />
-          </div>
+        {/* One continuous dotted background from the Hero all the way to the ROI
+            calculator — every section in this run is transparent and paints above
+            the shared field, so the dots never stop/restart at a seam. Features'
+            own violet gradient wash covers the dots through its body and releases
+            them at its faded edges. (Section order: hero → context switching →
+            features, then social proof validates the claims, the ROI calculator
+            quantifies them, pricing closes.) */}
+        <SharedDotsGroup>
           <Hero />
           <ContextSwitching />
-        </div>
-        <LazySection minHeight={1200}>
-          <Features />
-        </LazySection>
-        {/* Social proof lands before the buying decision: testimonials validate
-            the claims, the ROI calculator quantifies them, pricing closes. */}
-        <LazySection minHeight={800}>
-          <TestimonialsSection />
-        </LazySection>
-        <LazySection minHeight={700}>
-          <RoiCalculator />
-        </LazySection>
+          <LazySection minHeight={1200}>
+            <Features />
+          </LazySection>
+          <LazySection minHeight={800}>
+            <TestimonialsSection />
+          </LazySection>
+          <LazySection minHeight={700}>
+            <RoiCalculator />
+          </LazySection>
+        </SharedDotsGroup>
         <LazySection minHeight={900}>
           <Pricing />
         </LazySection>
-        <LazySection minHeight={700}>
-          <FAQSection />
-        </LazySection>
-        <LazySection minHeight={600}>
-          <ContactSection />
-        </LazySection>
+        <SharedDotsGroup>
+          <LazySection minHeight={700}>
+            <FAQSection />
+          </LazySection>
+          <LazySection minHeight={600}>
+            <ContactSection />
+          </LazySection>
+        </SharedDotsGroup>
       </main>
       <div id="site-footer">
         <LazySection minHeight={500}>

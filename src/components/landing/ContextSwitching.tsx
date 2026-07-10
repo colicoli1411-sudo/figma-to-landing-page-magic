@@ -11,28 +11,35 @@ import {
 } from "./BrandIcons";
 import { SplitText } from "./SplitText";
 
+type Ring = "inner" | "outer";
+
 type FloatingApp = {
   id: string;
   name: string;
   Icon: ComponentType<SVGProps<SVGSVGElement>>;
-  position: string;
+  // Desktop-only placement: which ellipse the card rides + its math-angle
+  // (0° = right, counter-clockwise, y-up). See RINGS / cardPos below.
+  ring: Ring;
+  angle: number;
   color: string;
   snippet: string;
   time: string;
 };
 
-/* Ordered as the chaos sequence fires:
+/* Ordered as the chaos sequence fires (drives the entrance stagger):
    Top-Left → Top-Right → Mid-Left → Mid-Right → Bottom-Left → Bottom-Right.
-   Two MIRRORED columns of three flanking the centered copy — identical
-   insets on both sides so the composition reads deliberate. The middle pair
-   hugs the card edge (2%), clearing the headline once the card is at cover
-   width; top/bottom pairs sit above/below the text band. */
+   On desktop the six cards ride two concentric "orbit" ellipses centered on
+   the copy: the four corner cards at mirrored diagonals on the outer ring, the
+   mid pair at the horizontal extremes of the inner ring (the widest point
+   where they never clip the frame). Each card is pinned to its ring by a small
+   glowing anchor dot ON the line, with the card hovering just above it. */
 const APPS: FloatingApp[] = [
   {
     id: "slack",
     name: "Slack",
     Icon: SlackIcon,
-    position: "left-[5%] top-[11%]",
+    ring: "outer",
+    angle: 140,
     color: "#611F69",
     snippet: "Got a sec? Quick question about the API…",
     time: "now",
@@ -41,7 +48,8 @@ const APPS: FloatingApp[] = [
     id: "gmail",
     name: "Gmail",
     Icon: GmailIcon,
-    position: "right-[5%] top-[11%]",
+    ring: "outer",
+    angle: 40,
     color: "#EA4335",
     snippet: "URGENT: Client feedback needed today",
     time: "2m",
@@ -50,7 +58,8 @@ const APPS: FloatingApp[] = [
     id: "teams",
     name: "Teams",
     Icon: TeamsIcon,
-    position: "left-[3%] top-[19%]",
+    ring: "inner",
+    angle: 180,
     color: "#5B5FC7",
     snippet: "Design sync starting now — join?",
     time: "now",
@@ -59,7 +68,8 @@ const APPS: FloatingApp[] = [
     id: "discord",
     name: "Discord",
     Icon: DiscordIcon,
-    position: "right-[3%] bottom-[19%]",
+    ring: "inner",
+    angle: 0,
     color: "#5865F2",
     snippet: "@everyone the new build is live",
     time: "5m",
@@ -68,7 +78,8 @@ const APPS: FloatingApp[] = [
     id: "whatsapp",
     name: "WhatsApp",
     Icon: WhatsAppIcon,
-    position: "left-[5%] bottom-[11%]",
+    ring: "outer",
+    angle: 220,
     color: "#25D366",
     snippet: "Hey! Are we still on for tonight?",
     time: "8m",
@@ -77,12 +88,53 @@ const APPS: FloatingApp[] = [
     id: "figma",
     name: "Figma",
     Icon: FigmaIcon,
-    position: "right-[5%] bottom-[11%]",
+    ring: "outer",
+    angle: 320,
     color: "#F24E1E",
     snippet: "Maya left a comment on Hero v2",
     time: "12m",
   },
 ];
+
+/* The two faint guide ellipses, as semi-axes in the 0–100 normalized space of
+   the desktop floats frame (percent of its width / height). The anchor dots +
+   cards ride these same ellipses via cardPos(), and the rendered <ellipse>
+   outlines use the identical values, so lines, dots and cards stay locked
+   together at any viewport aspect. Both rings share ONE aspect ratio so they
+   read as a uniform concentric pair:
+   - inner (rx 37): the widest the mid pair (at 180°/0°) can sit without
+     clipping the frame edge at a 1024px viewport.
+   - outer (rx 44): the widest the diagonal corner cards can ride without
+     clipping at 1024 (~35px margin). */
+const RING_ASPECT = 46 / 44; // shared ry:rx — identical proportions on all rings
+const RING_RX: Record<Ring, number> = { outer: 44, inner: 37 };
+const RINGS: Record<Ring, { rx: number; ry: number }> = {
+  outer: { rx: RING_RX.outer, ry: RING_RX.outer * RING_ASPECT },
+  inner: { rx: RING_RX.inner, ry: RING_RX.inner * RING_ASPECT },
+};
+
+/* Decorative echo rings — continue the same 7-step rhythm and aspect outward
+   past the card rings, fading as they go (0.24 → 0.15 → 0.08) until they crop
+   at the screen edges. Pure atmosphere: no cards, no dots. */
+const DECOR_RINGS = [51, 58, 65].map((rx, i) => ({
+  rx,
+  ry: rx * RING_ASPECT,
+  opacity: [0.24, 0.15, 0.08][i],
+}));
+
+/** Card center as left/top percentage strings of the floats frame, from its
+ *  ring + angle. left = 50 + rx·cosθ, top = 50 − ry·sinθ (screen y grows
+ *  downward, so sin is negated). The point lies exactly on the matching
+ *  <ellipse>. Rounded to a fixed precision so the SSR and client strings match
+ *  exactly (raw float stringification differs and trips React hydration). */
+function cardPos({ ring, angle }: { ring: Ring; angle: number }) {
+  const { rx, ry } = RINGS[ring];
+  const rad = (angle * Math.PI) / 180;
+  return {
+    left: `${(50 + rx * Math.cos(rad)).toFixed(3)}%`,
+    top: `${(50 - ry * Math.sin(rad)).toFixed(3)}%`,
+  };
+}
 
 const FLOAT_CONFIG = [
   { duration: 4, delay: 0 },
@@ -233,27 +285,99 @@ export function ContextSwitching() {
             "linear-gradient(to bottom, transparent 0%, black 12%, black 88%, transparent 100%)",
         }}
       >
+        {/* Below lg the blur filter is dropped: mobile GPUs rasterize huge
+            filtered layers lazily, so the glow visibly completed itself only
+            after scrolling. Slightly wider gradient stops give the same
+            softness and paint instantly. */}
         <div
           className="absolute -left-[10%] top-[6%] h-[620px] w-[620px] rounded-full opacity-50"
           style={{
             background:
-              "radial-gradient(circle at 45% 45%, rgba(135,212,196,0.20) 0%, rgba(135,212,196,0.10) 40%, transparent 72%)",
-            filter: "blur(120px)",
+              cardLayer === "mobile"
+                ? "radial-gradient(circle at 45% 45%, rgba(135,212,196,0.20) 0%, rgba(135,212,196,0.10) 48%, transparent 82%)"
+                : "radial-gradient(circle at 45% 45%, rgba(135,212,196,0.20) 0%, rgba(135,212,196,0.10) 40%, transparent 72%)",
+            filter: cardLayer === "mobile" ? undefined : "blur(120px)",
           }}
         />
         <div
           className="absolute -right-[10%] bottom-[6%] h-[640px] w-[640px] rounded-full opacity-55"
           style={{
             background:
-              "radial-gradient(circle at 55% 55%, rgba(110,86,207,0.22) 0%, rgba(170,153,236,0.10) 40%, transparent 72%)",
-            filter: "blur(120px)",
+              cardLayer === "mobile"
+                ? "radial-gradient(circle at 55% 55%, rgba(110,86,207,0.22) 0%, rgba(170,153,236,0.10) 48%, transparent 82%)"
+                : "radial-gradient(circle at 55% 55%, rgba(110,86,207,0.22) 0%, rgba(170,153,236,0.10) 40%, transparent 72%)",
+            filter: cardLayer === "mobile" ? undefined : "blur(120px)",
           }}
         />
       </div>
 
-      {/* Floating notifications (desktop) — absolutely placed within a centered
-          max-w frame so they flank the headline instead of hugging the screen
-          edges on wide monitors. */}
+      {/* Orbit rings (desktop) — full-section layer so the decorative echo
+          rings can run past the 1400px frame to the screen edges. The fade
+          mask lives on THIS wrapper (its border-box spans the whole section):
+          a CSS mask clips paint outside its element's box, so masking the
+          overflowing SVG directly amputated every arc beyond the frame — the
+          "weird cuts". The inner div re-creates the frame's exact width, so
+          the SVG's 0–100 space still matches cardPos()/the anchor dots. */}
+      {cardLayer !== "mobile" && (
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-0 z-[2] hidden lg:block"
+          style={{
+            WebkitMaskImage:
+              "linear-gradient(to bottom, transparent 0%, black 15%, black 85%, transparent 100%)",
+            maskImage:
+              "linear-gradient(to bottom, transparent 0%, black 15%, black 85%, transparent 100%)",
+          }}
+        >
+          <div className="relative mx-auto h-full w-full max-w-[1400px]">
+            <svg
+              className="absolute inset-0 h-full w-full"
+              viewBox="0 0 100 100"
+              preserveAspectRatio="none"
+              fill="none"
+              style={{ overflow: "visible" }}
+            >
+              {DECOR_RINGS.map((ring) => (
+                <ellipse
+                  key={ring.rx}
+                  cx="50"
+                  cy="50"
+                  rx={ring.rx}
+                  ry={ring.ry}
+                  stroke="#6E56CF"
+                  strokeOpacity={ring.opacity}
+                  strokeWidth={1.2}
+                  vectorEffect="non-scaling-stroke"
+                />
+              ))}
+              <ellipse
+                cx="50"
+                cy="50"
+                rx={RINGS.outer.rx}
+                ry={RINGS.outer.ry}
+                stroke="#6E56CF"
+                strokeOpacity={0.35}
+                strokeWidth={1.2}
+                vectorEffect="non-scaling-stroke"
+              />
+              <ellipse
+                cx="50"
+                cy="50"
+                rx={RINGS.inner.rx}
+                ry={RINGS.inner.ry}
+                stroke="#6E56CF"
+                strokeOpacity={0.35}
+                strokeWidth={1.2}
+                vectorEffect="non-scaling-stroke"
+              />
+            </svg>
+          </div>
+        </div>
+      )}
+
+      {/* Floating notifications (desktop) — each card rides one of the two
+          card rings, inside a centered max-w frame so the composition stays
+          anchored on wide monitors. */}
       {cardLayer !== "mobile" && (
         <motion.div
           className="pointer-events-none absolute left-1/2 top-0 z-[2] hidden h-full w-full max-w-[1400px] -translate-x-1/2 lg:block"
@@ -261,9 +385,37 @@ export function ContextSwitching() {
           animate={cardControls}
           variants={layerVariants}
         >
-          {APPS.map((app, i) => (
-            <FloatingCard key={app.id} app={app} index={i} className={`absolute ${app.position}`} />
-          ))}
+          {APPS.map((app, i) => {
+            const { left, top } = cardPos(app);
+            // Pin direction: the card always hangs off the line AWAY from the
+            // centre copy — above its dot on the top half of the ring, below
+            // it on the bottom half — so it never drifts toward the text.
+            const below = Math.sin((app.angle * Math.PI) / 180) < 0;
+            return (
+              // 0×0 anchor point exactly ON the ring: holds the glowing anchor
+              // dot (fixed) and the card "pinned" beside it, so the dot + line
+              // stay visible while the card floats gently.
+              <div key={app.id} className="absolute" style={{ left, top }}>
+                <span
+                  aria-hidden
+                  className="absolute h-[7px] w-[7px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#6E56CF]"
+                  style={{
+                    boxShadow:
+                      "0 0 0 5px rgba(110,86,207,0.12), 0 0 14px 2px rgba(110,86,207,0.35)",
+                  }}
+                />
+                <div
+                  className={`absolute left-0 w-[280px] xl:w-[310px] ${below ? "top-[8px]" : "bottom-[8px]"}`}
+                  style={{
+                    transform: "translateX(-50%) scale(0.88)",
+                    transformOrigin: below ? "top center" : "bottom center",
+                  }}
+                >
+                  <FloatingCard app={app} index={i} className="" />
+                </div>
+              </div>
+            );
+          })}
         </motion.div>
       )}
 
@@ -283,10 +435,12 @@ export function ContextSwitching() {
         />
       </div>
 
-      {/* Tablet + mobile fallback — stacked grid below lg. Same choreography. */}
+      {/* Tablet + mobile fallback — 2-up grid below lg. On phones the cards
+          shrink (see FloatingCard's base vs sm: sizes) so two fit a narrow row;
+          from sm they return to full size. Same choreography. */}
       {cardLayer !== "desktop" && (
         <motion.div
-          className="relative z-10 mx-auto mt-12 grid w-full max-w-[520px] grid-cols-1 gap-3 sm:max-w-[720px] sm:grid-cols-2 lg:hidden"
+          className="relative z-10 mx-auto mt-12 grid w-full max-w-[440px] grid-cols-2 gap-2.5 sm:max-w-[720px] sm:gap-3 lg:hidden"
           initial="hidden"
           animate={cardControls}
           variants={layerVariants}
@@ -313,7 +467,7 @@ function FloatingCard({
   const cfg = FLOAT_CONFIG[index % FLOAT_CONFIG.length];
   return (
     <motion.div
-      className={`floating-distraction-card pointer-events-auto flex w-full items-start gap-3 rounded-2xl border border-white/40 bg-white/80 p-[14px] backdrop-blur-md lg:w-[280px] xl:w-[310px] ${className}`}
+      className={`floating-distraction-card pointer-events-auto flex w-full items-start gap-2 rounded-xl border border-white/40 bg-white/80 p-2.5 backdrop-blur-md sm:gap-3 sm:rounded-2xl sm:p-[14px] ${className}`}
       style={{
         boxShadow:
           "0 1px 2px rgba(16,24,40,0.04), 0 4px 12px -4px rgba(16,24,40,0.06), 0 12px 24px -8px rgba(16,24,40,0.08), 0 20px 40px -12px rgba(110,86,207,0.18), inset 0 1px 0 rgba(255,255,255,0.6)",
@@ -324,23 +478,25 @@ function FloatingCard({
       data-edit-label={`App: ${name}`}
     >
       <span
-        className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-xl"
+        className="relative flex h-8 w-8 shrink-0 items-center justify-center rounded-lg sm:h-10 sm:w-10 sm:rounded-xl"
         style={{ backgroundColor: `${color}1a` }}
       >
-        <Icon className="h-5 w-5" />
+        <Icon className="h-4 w-4 sm:h-5 sm:w-5" />
         {/* Red notification dot — hidden until the chaos phase. */}
         <motion.span
-          className="absolute -right-1 -top-1 h-3 w-3 rounded-full border-2 border-white bg-red-500"
+          className="absolute -right-1 -top-1 h-2.5 w-2.5 rounded-full border-2 border-white bg-red-500 sm:h-3 sm:w-3"
           style={{ transformOrigin: "center" }}
           variants={dotVariants}
         />
       </span>
       <span className="flex min-w-0 flex-1 flex-col items-start gap-0.5 text-left">
         <span className="flex w-full items-baseline justify-between gap-2">
-          <span className="text-[14px] font-semibold leading-tight text-[#111827]">{name}</span>
+          <span className="text-[13px] font-semibold leading-tight text-[#111827] sm:text-[14px]">
+            {name}
+          </span>
           {/* Timestamp — appears with the message during chaos. */}
           <motion.span
-            className="shrink-0 text-[11px] font-medium leading-tight text-[#9ca3af]"
+            className="shrink-0 text-[10px] font-medium leading-tight text-[#9ca3af] sm:text-[11px]"
             variants={snippetVariants}
           >
             {time}
@@ -348,7 +504,7 @@ function FloatingCard({
         </span>
         {/* Notification message — fades in during chaos. */}
         <motion.span
-          className="w-full truncate text-[12px] font-medium leading-snug text-[#6b7280]"
+          className="w-full truncate text-[11px] font-medium leading-snug text-[#6b7280] sm:text-[12px]"
           variants={snippetVariants}
         >
           {snippet}

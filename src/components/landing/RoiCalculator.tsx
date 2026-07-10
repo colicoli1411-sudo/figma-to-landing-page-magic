@@ -1,11 +1,11 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useInView } from "@/hooks/use-in-view";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { SplitText } from "./SplitText";
 import * as SliderPrimitive from "@radix-ui/react-slider";
 import { animate, motion, useMotionValue, useReducedMotion, useTransform } from "framer-motion";
 import { ArrowRight, Info } from "lucide-react";
 import { IntegrationStrip } from "./Integrations";
-import DotField from "./DotField";
 import { cn } from "@/lib/utils";
 import { CTA_PRIMARY, GlareHover } from "./cta";
 
@@ -129,6 +129,7 @@ export function RoiCalculator() {
   const [teamSize, setTeamSize] = useState(10);
   const [monthlySalary, setMonthlySalary] = useState(10000);
   const [sectionRef, sectionInView] = useInView<HTMLElement>();
+  const isMobileGlow = useIsMobile();
 
   const { moneySavedPerYear, hoursReclaimedPerWeek } = useMemo(() => {
     const p = CAPACITY_LOST_PCT / 100;
@@ -145,37 +146,13 @@ export function RoiCalculator() {
       ref={sectionRef}
       id="roi-calculator"
       className="relative overflow-hidden py-24 md:py-32"
-      style={{ backgroundColor: "#F8F9FB" }}
       // Pauses the card's infinite conic-gradient sweep (.glow-border) while
       // the section is scrolled off-screen (see styles.css).
       data-offscreen={!sectionInView ? "true" : undefined}
     >
-      {/* Interactive dot-field background — same treatment as the hero, sitting
-          behind the aurora mesh and all content. Edge-masked so the dots
-          dissolve at the section boundaries instead of starting on a line. */}
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-0 z-0"
-        style={{
-          WebkitMaskImage:
-            "linear-gradient(to bottom, transparent 0%, black 12%, black 88%, transparent 100%)",
-          maskImage:
-            "linear-gradient(to bottom, transparent 0%, black 12%, black 88%, transparent 100%)",
-        }}
-      >
-        <DotField
-          dotRadius={1.5}
-          dotSpacing={14}
-          bulgeStrength={0}
-          glowRadius={0}
-          sparkle={false}
-          waveAmplitude={0}
-          cursorRadius={0}
-          cursorForce={0}
-          gradientFrom="#6E56CF"
-          glowColor="#fcfbff"
-        />
-      </div>
+      {/* The dotted background is a shared layer spanning Testimonials + this
+          section (see routes/index.tsx SharedDotsGroup) so the dots read as one
+          continuous field across the seam — this section is transparent. */}
 
       {/* Ambient aurora mesh — echoes Features, kept subtle. Edge-masked so the
           blurred blobs dissolve before the overflow-hidden boundary. */}
@@ -188,20 +165,25 @@ export function RoiCalculator() {
             "linear-gradient(to bottom, transparent 0%, black 12%, black 88%, transparent 100%)",
         }}
       >
+        {/* On mobile the blur filter is dropped: mobile GPUs rasterize huge
+            filtered layers lazily (the glow painted late while scrolling).
+            Wider gradient stops give the same softness and paint instantly. */}
         <div
           className="absolute -left-[18%] -top-[12%] h-[760px] w-[760px] rounded-full opacity-60"
           style={{
-            background:
-              "radial-gradient(circle at 40% 40%, rgba(110,86,207,0.26) 0%, rgba(170,153,236,0.12) 35%, transparent 70%)",
-            filter: "blur(110px)",
+            background: isMobileGlow
+              ? "radial-gradient(circle at 40% 40%, rgba(110,86,207,0.26) 0%, rgba(170,153,236,0.12) 42%, transparent 80%)"
+              : "radial-gradient(circle at 40% 40%, rgba(110,86,207,0.26) 0%, rgba(170,153,236,0.12) 35%, transparent 70%)",
+            filter: isMobileGlow ? undefined : "blur(110px)",
           }}
         />
         <div
           className="absolute -right-[16%] bottom-[-10%] h-[720px] w-[720px] rounded-full opacity-50"
           style={{
-            background:
-              "radial-gradient(circle at 60% 50%, rgba(135,212,196,0.28) 0%, rgba(135,212,196,0.15) 40%, transparent 75%)",
-            filter: "blur(120px)",
+            background: isMobileGlow
+              ? "radial-gradient(circle at 60% 50%, rgba(135,212,196,0.28) 0%, rgba(135,212,196,0.15) 48%, transparent 84%)"
+              : "radial-gradient(circle at 60% 50%, rgba(135,212,196,0.28) 0%, rgba(135,212,196,0.15) 40%, transparent 75%)",
+            filter: isMobileGlow ? undefined : "blur(120px)",
           }}
         />
       </div>

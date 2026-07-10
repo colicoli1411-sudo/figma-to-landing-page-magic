@@ -2,7 +2,6 @@ import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { ChevronDown } from "lucide-react";
 import { SplitText } from "./SplitText";
-import DotField from "./DotField";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 const faqs = [
@@ -125,34 +124,10 @@ export function FAQSection() {
     <section
       id="faq"
       className="relative z-10 py-24 md:py-32"
-      style={{ backgroundColor: "#F8F9FB" }}
     >
-      {/* Interactive dot-field background — same treatment as the hero, sitting
-          behind the aurora mesh and all content. Edge-masked so the dots
-          dissolve at the section boundaries instead of stopping on a line. */}
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-0 z-0"
-        style={{
-          WebkitMaskImage:
-            "linear-gradient(to bottom, transparent 0%, black 10%, black 88%, transparent 100%)",
-          maskImage:
-            "linear-gradient(to bottom, transparent 0%, black 10%, black 88%, transparent 100%)",
-        }}
-      >
-        <DotField
-          dotRadius={1.5}
-          dotSpacing={14}
-          bulgeStrength={0}
-          glowRadius={0}
-          sparkle={false}
-          waveAmplitude={0}
-          cursorRadius={0}
-          cursorForce={0}
-          gradientFrom="#6E56CF"
-          glowColor="#fcfbff"
-        />
-      </div>
+      {/* The dotted background is a shared layer spanning this section + Contact
+          (see routes/index.tsx SharedDotsGroup) so the dots read as one
+          continuous field across the seam — this section is transparent. */}
 
       {/* ── Ambient mesh glow — dedicated background layer ─────────────────────
           A separate absolute inset-0 layer (NOT in the content flow), clipped by
@@ -167,10 +142,25 @@ export function FAQSection() {
           above, a little violet into Contact below. The heavy blur makes the
           crossover seamless, so no edge mask is needed. */}
       <div className="pointer-events-none absolute inset-0 z-0">
+        {/* Mobile skips `filter: blur()` on these huge layers: the section's
+            height animates while the accordion opens, and re-rasterizing two
+            giant blurred layers every frame is what made the open/close
+            stutter. An equivalent radial-gradient is soft for free and cheap
+            to repaint, so the accordion animates as smoothly as desktop. */}
         {/* Secondary-mint — mostly off the top-left corner; only a faint wash reaches in. */}
         <motion.div
-          className="absolute -left-[22%] -top-[30%] h-[520px] w-[520px] rounded-full bg-[#87D4C4]/10 blur-[130px] md:h-[720px] md:w-[720px] md:blur-[160px]"
-          style={{ willChange: "transform" }}
+          className={`absolute -left-[22%] -top-[30%] h-[520px] w-[520px] rounded-full md:h-[720px] md:w-[720px] md:blur-[160px] ${
+            isMobile ? "" : "bg-[#87D4C4]/10 blur-[130px]"
+          }`}
+          style={{
+            willChange: "transform",
+            ...(isMobile
+              ? {
+                  background:
+                    "radial-gradient(circle at 50% 50%, rgba(135,212,196,0.10) 0%, rgba(135,212,196,0.06) 45%, rgba(135,212,196,0) 72%)",
+                }
+              : null),
+          }}
           animate={
             isMobile
               ? undefined
@@ -189,8 +179,18 @@ export function FAQSection() {
         />
         {/* Violet — mostly off the bottom-right corner; only a faint wash reaches in. */}
         <motion.div
-          className="absolute -bottom-[38%] -right-[20%] h-[560px] w-[560px] rounded-full bg-violet-400/12 blur-[130px] md:h-[760px] md:w-[760px] md:blur-[160px]"
-          style={{ willChange: "transform" }}
+          className={`absolute -bottom-[38%] -right-[20%] h-[560px] w-[560px] rounded-full md:h-[760px] md:w-[760px] md:blur-[160px] ${
+            isMobile ? "" : "bg-violet-400/12 blur-[130px]"
+          }`}
+          style={{
+            willChange: "transform",
+            ...(isMobile
+              ? {
+                  background:
+                    "radial-gradient(circle at 50% 50%, rgba(196,184,243,0.12) 0%, rgba(196,184,243,0.07) 45%, rgba(196,184,243,0) 72%)",
+                }
+              : null),
+          }}
           animate={
             isMobile
               ? undefined
