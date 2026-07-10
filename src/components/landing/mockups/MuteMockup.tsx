@@ -52,11 +52,9 @@ const rgba = (hex: string, a: number) => {
 };
 
 const prefersReduced = () =>
-  typeof window !== "undefined" &&
-  window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-const CARD_SHADOW =
-  "0px 1px 2px -1px rgba(0,0,0,0.05), 0px 1px 3px 0px rgba(0,0,0,0.08)";
+const CARD_SHADOW = "0px 1px 2px -1px rgba(0,0,0,0.05), 0px 1px 3px 0px rgba(0,0,0,0.08)";
 
 export function MuteMockup() {
   // Reduced motion → show the resolved "all muted" state, no looping animation.
@@ -105,23 +103,31 @@ export function MuteMockup() {
       className="relative h-full w-full overflow-hidden"
       style={{ background: "#F2ECFE", containerType: "inline-size" }}
     >
-      {/* .mockup-inner supplies --ms — a type multiplier that steps up as the
-          card narrows (see styles.css) so the UI stays readable in the phone
-          carousel while staying bit-identical on the 640px desktop stack. */}
-      <div className="mockup-inner absolute inset-0 flex flex-col justify-center px-[4.5cqw] py-[4cqw]">
+      {/* .mockup-inner supplies --mu — one design unit (1cqw × --ms, styles.css)
+          applied to EVERY dimension below, so each panel is an exact
+          proportional replica of the 640px desktop design at any card width.
+          Only the frame padding (.mockup-mute-frame, styles.css) stays outside
+          the unit — it's canvas framing, not product UI, and it tightens on
+          narrow cards to hand its width back to the app grid. */}
+      <div className="mockup-inner mockup-mute-frame absolute inset-0 flex flex-col justify-center">
         {/* Header */}
         <div
-          className="rounded-[1.4cqw] border border-[#E5E7EB] bg-white px-[2.2cqw] py-[1.9cqw]"
+          className="rounded-[calc(1.4*var(--mu))] border border-[#E5E7EB] bg-white px-[calc(2.2*var(--mu))] py-[calc(1.9*var(--mu))]"
           style={{ boxShadow: CARD_SHADOW }}
         >
-          <h3 className="text-[calc(2.6cqw*var(--ms))] font-bold leading-none text-[#111827]">Integrations</h3>
-          <p className="mt-[1cqw] text-[calc(1.3cqw*var(--ms))] leading-snug text-[#6B7280]">
+          <h3
+            className="text-[calc(2.6*var(--mu))] leading-none text-[#111827]"
+            style={{ fontWeight: "var(--mock-title)" }}
+          >
+            Integrations
+          </h3>
+          <p className="mt-[calc(1*var(--mu))] text-[calc(1.3*var(--mu))] leading-snug text-[#6B7280]">
             Select which applications are automatically muted during your deep work sessions.
           </p>
         </div>
 
         {/* App grid — 3-up on desktop, 2-up in narrow cards (styles.css) */}
-        <div className="mockup-grid-apps mt-[2.6cqw] items-start gap-[2cqw]">
+        <div className="mockup-grid-apps mt-[calc(2.6*var(--mu))] items-start gap-[calc(2*var(--mu))]">
           {APPS.map((app, i) => (
             <AppCard key={app.name} app={app} on={on[i]} />
           ))}
@@ -129,31 +135,31 @@ export function MuteMockup() {
 
         {/* Info bar */}
         <div
-          className="mt-[2.4cqw] flex items-start gap-[1.6cqw] rounded-[1.4cqw] border border-[#E5E7EB] bg-white p-[1.9cqw]"
+          className="mt-[calc(2.4*var(--mu))] flex items-start gap-[calc(1.6*var(--mu))] rounded-[calc(1.4*var(--mu))] border border-[#E5E7EB] bg-white p-[calc(1.9*var(--mu))]"
           style={{ boxShadow: CARD_SHADOW }}
         >
           <div
-            className="flex shrink-0 items-center justify-center rounded-[1.2cqw]"
+            className="flex shrink-0 items-center justify-center rounded-[calc(1.2*var(--mu))]"
             style={{
-              width: "calc(3.3cqw * var(--ms))",
-              height: "calc(3.3cqw * var(--ms))",
+              width: "calc(3.3 * var(--mu))",
+              height: "calc(3.3 * var(--mu))",
               background: "rgba(110,86,207,0.1)",
             }}
           >
             <svg
               viewBox="0 0 24 24"
               fill="none"
-              style={{ width: "calc(1.7cqw * var(--ms))", height: "calc(1.7cqw * var(--ms))" }}
+              style={{ width: "calc(1.7 * var(--mu))", height: "calc(1.7 * var(--mu))" }}
             >
               <circle cx="12" cy="12" r="9" stroke="#6E56CF" strokeWidth="2" />
               <path d="M12 11v5M12 8h.01" stroke="#6E56CF" strokeWidth="2" strokeLinecap="round" />
             </svg>
           </div>
           <div className="min-w-0">
-            <div className="text-[calc(1.35cqw*var(--ms))] font-semibold leading-none text-[#111827]">
+            <div className="text-[calc(1.35*var(--mu))] font-semibold leading-none text-[#111827]">
               How do integrations work?
             </div>
-            <p className="mt-[0.9cqw] text-[calc(1.15cqw*var(--ms))] leading-snug text-[#6B7280]">
+            <p className="mt-[calc(0.9*var(--mu))] text-[calc(1.15*var(--mu))] leading-snug text-[#6B7280]">
               When you start a Focus Session, FocusFlow automatically mutes notifications from
               enabled apps. Once your session ends, they're restored to their previous state.
             </p>
@@ -168,17 +174,17 @@ function AppCard({ app, on }: { app: App; on: boolean }) {
   const { name, desc, Icon, color } = app;
   return (
     <div
-      className="flex flex-col rounded-[1.5cqw] border border-[#E5E7EB] bg-white p-[2cqw]"
+      className="flex flex-col rounded-[calc(1.5*var(--mu))] border border-[#E5E7EB] bg-white p-[calc(2*var(--mu))]"
       style={{ boxShadow: CARD_SHADOW }}
     >
-      <div className="flex items-center gap-[1.4cqw]">
+      <div className="flex items-center gap-[calc(1.4*var(--mu))]">
         {/* Icon tile — grey when muted-off, brand-tinted when active */}
         <div
-          className="flex shrink-0 items-center justify-center rounded-[1.4cqw]"
+          className="flex shrink-0 items-center justify-center rounded-[calc(1.4*var(--mu))]"
           style={{
-            width: "calc(4.2cqw * var(--ms))",
-            height: "calc(4.2cqw * var(--ms))",
-            borderWidth: "max(0.16cqw, 1px)",
+            width: "calc(4.2 * var(--mu))",
+            height: "calc(4.2 * var(--mu))",
+            borderWidth: "max(calc(0.16 * var(--mu)), 1px)",
             borderStyle: "solid",
             backgroundColor: on ? rgba(color, 0.08) : "#F5F5F5",
             borderColor: on ? rgba(color, 0.19) : "#E5E7EB",
@@ -193,28 +199,26 @@ function AppCard({ app, on }: { app: App; on: boolean }) {
               transition: "filter 0.4s ease, opacity 0.4s ease",
             }}
           >
-            <Icon
-              style={{ width: "calc(2.2cqw * var(--ms))", height: "calc(2.2cqw * var(--ms))" }}
-            />
+            <Icon style={{ width: "calc(2.2 * var(--mu))", height: "calc(2.2 * var(--mu))" }} />
           </div>
         </div>
 
         {/* Title + description */}
         <div className="min-w-0 flex-1">
-          <div className="truncate text-[calc(1.45cqw*var(--ms))] font-semibold leading-tight text-[#111827]">
+          <div className="truncate text-[calc(1.45*var(--mu))] font-semibold leading-tight text-[#111827]">
             {name}
           </div>
-          <div className="mt-[0.4cqw] truncate text-[calc(1.2cqw*var(--ms))] leading-tight text-[#6B7280]">
+          <div className="mt-[calc(0.4*var(--mu))] truncate text-[calc(1.2*var(--mu))] leading-tight text-[#6B7280]">
             {desc}
           </div>
         </div>
 
         {/* Switch */}
         <div
-          className="flex shrink-0 items-center rounded-full p-[0.24cqw]"
+          className="flex shrink-0 items-center rounded-full p-[calc(0.24*var(--mu))]"
           style={{
-            width: "calc(3.2cqw * var(--ms))",
-            height: "calc(1.9cqw * var(--ms))",
+            width: "calc(3.2 * var(--mu))",
+            height: "calc(1.9 * var(--mu))",
             backgroundColor: on ? ON_TRACK : OFF_TRACK,
             transition: "background-color 0.35s ease",
           }}
@@ -222,9 +226,9 @@ function AppCard({ app, on }: { app: App; on: boolean }) {
           <div
             className="rounded-full bg-white"
             style={{
-              width: "calc(1.42cqw * var(--ms))",
-              height: "calc(1.42cqw * var(--ms))",
-              boxShadow: "0 0.15cqw 0.3cqw rgba(0,0,0,0.2)",
+              width: "calc(1.42 * var(--mu))",
+              height: "calc(1.42 * var(--mu))",
+              boxShadow: "0 calc(0.15 * var(--mu)) calc(0.3 * var(--mu)) rgba(0,0,0,0.2)",
               transform: on ? "translateX(87%)" : "translateX(0)",
               transition: "transform 0.4s cubic-bezier(0.22,1,0.36,1)",
             }}
@@ -244,19 +248,19 @@ function AppCard({ app, on }: { app: App; on: boolean }) {
       >
         <div style={{ overflow: "hidden" }}>
           <div
-            className="flex items-center gap-[1cqw] border-t border-[#E5E7EB] pt-[1.4cqw]"
-            style={{ marginTop: "1.5cqw" }}
+            className="flex items-center gap-[calc(1*var(--mu))] border-t border-[#E5E7EB] pt-[calc(1.4*var(--mu))]"
+            style={{ marginTop: "calc(1.5 * var(--mu))" }}
           >
             <span
               className="shrink-0 rounded-full"
               style={{
-                width: "calc(0.85cqw * var(--ms))",
-                height: "calc(0.85cqw * var(--ms))",
+                width: "calc(0.85 * var(--mu))",
+                height: "calc(0.85 * var(--mu))",
                 background: ON_TRACK,
               }}
             />
             <span
-              className="text-[calc(1.15cqw*var(--ms))] font-medium leading-none"
+              className="text-[calc(1.15*var(--mu))] font-medium leading-none"
               style={{ color: ON_TRACK }}
             >
               Active during Focus Sessions

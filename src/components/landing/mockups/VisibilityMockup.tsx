@@ -20,10 +20,7 @@ type Status = "available" | "deep-work" | "break";
 /** The three default statuses, in the order each member cycles through them. */
 const STATUS_ORDER: Status[] = ["available", "deep-work", "break"];
 
-const STATUS_STYLES: Record<
-  Status,
-  { label: string; bg: string; color: string; glow: string }
-> = {
+const STATUS_STYLES: Record<Status, { label: string; bg: string; color: string; glow: string }> = {
   available: {
     label: "Available",
     bg: "#d1fae5",
@@ -52,10 +49,20 @@ const MEMBERS: {
 }[] = [
   { initials: "V", name: "Avi (You)", status: "available", avatar: "/images/avi-avatar.png" },
   { initials: "SC", name: "Sarah Chen", status: "deep-work", avatar: "/images/sarah-chen.jpg" },
-  { initials: "MR", name: "Marcus Rodriguez", status: "deep-work", avatar: "/images/marcus-rodriguez.jpg" },
+  {
+    initials: "MR",
+    name: "Marcus Rodriguez",
+    status: "deep-work",
+    avatar: "/images/marcus-rodriguez.jpg",
+  },
   { initials: "EW", name: "Emma Wilson", status: "available", avatar: "/images/emma-wilson.jpg" },
   { initials: "JP", name: "James Park", status: "available", avatar: "/images/james-park.jpg" },
-  { initials: "OM", name: "Olivia Martinez", status: "break", avatar: "/images/olivia-martinez.jpg" },
+  {
+    initials: "OM",
+    name: "Olivia Martinez",
+    status: "break",
+    avatar: "/images/olivia-martinez.jpg",
+  },
 ];
 
 export function VisibilityMockup() {
@@ -102,11 +109,7 @@ export function VisibilityMockup() {
           sidebar is closed, so the left stays purple instead of a white rail.
           On mobile the panel spans full width (there was never a sidebar there);
           on sm+ it's inset from the left where the sidebar used to sit. */}
-      <div
-        className="absolute inset-0"
-        style={{ filter: "blur(3px)" }}
-        aria-hidden
-      >
+      <div className="absolute inset-0" style={{ filter: "blur(3px)" }} aria-hidden>
         <div className="h-full p-[4cqw]">
           {/* App header bar */}
           <div className="mb-[2.6cqw] flex items-center justify-between rounded-[1.8cqw] border border-[#e5e7eb] bg-white px-[2.4cqw] py-[1.8cqw]">
@@ -120,9 +123,7 @@ export function VisibilityMockup() {
           {/* Focus timer card */}
           <div className="flex items-center justify-center rounded-[1.8cqw] border border-[#e5e7eb] bg-white py-[6cqw]">
             <div className="relative flex aspect-square w-[27cqw] items-center justify-center rounded-full border-[1.1cqw] border-[rgba(110,86,207,0.18)]">
-              <span className="text-[5.2cqw] font-bold leading-none text-[#0b0b0b]">
-                25:00
-              </span>
+              <span className="text-[5.2cqw] font-bold leading-none text-[#0b0b0b]">25:00</span>
             </div>
           </div>
         </div>
@@ -139,29 +140,33 @@ export function VisibilityMockup() {
       />
 
       {/* ---------- Sharp, authentic Team Flow panel ----------
-          .mockup-inner supplies --ms (type multiplier for narrow cards) and
-          .mockup-vis-panel widens the panel there — see styles.css. */}
+          .mockup-inner supplies --mu (one uniform design unit — see styles.css)
+          so the panel scales as an intact replica of its desktop self, and
+          .mockup-vis-panel widens it on narrow cards. */}
       <div
-        className="mockup-inner mockup-vis-panel absolute right-[3.5%] top-1/2 -translate-y-1/2 rounded-[2.4cqw] border border-[#e5e7eb] bg-white p-[2.4cqw] ring-1 ring-violet-100"
+        className="mockup-inner mockup-vis-panel absolute right-[3.5%] top-1/2 -translate-y-1/2 rounded-[calc(2.4*var(--mu))] border border-[#e5e7eb] bg-white p-[calc(2.4*var(--mu))] ring-1 ring-violet-100"
         style={{
           boxShadow:
             "0 22px 48px -18px rgba(31,29,66,0.45), 0 10px 24px -16px rgba(110,86,207,0.32)",
         }}
       >
         {/* Header */}
-        <div className="flex items-center gap-[1.6cqw]">
-          <div className="flex h-[calc(4.4cqw*var(--ms))] w-[calc(4.4cqw*var(--ms))] items-center justify-center rounded-[1.5cqw] bg-[rgba(110,86,207,0.2)]">
-            <Users className="h-[calc(2.5cqw*var(--ms))] w-[calc(2.5cqw*var(--ms))] text-[#6E56CF]" />
+        <div className="flex items-center gap-[calc(1.6*var(--mu))]">
+          <div className="flex h-[calc(4.4*var(--mu))] w-[calc(4.4*var(--mu))] items-center justify-center rounded-[calc(1.5*var(--mu))] bg-[rgba(110,86,207,0.2)]">
+            <Users className="h-[calc(2.5*var(--mu))] w-[calc(2.5*var(--mu))] text-[#6E56CF]" />
           </div>
-          <h3 className="text-[calc(2.2cqw*var(--ms))] font-semibold leading-none text-[#111827]">
+          <h3
+            className="text-[calc(2.2*var(--mu))] leading-none text-[#111827]"
+            style={{ fontWeight: "var(--mock-title)" }}
+          >
             Team Flow
           </h3>
         </div>
 
-        <div className="my-[1.8cqw] h-px bg-[#e5e7eb]" />
+        <div className="my-[calc(1.8*var(--mu))] h-px bg-[#e5e7eb]" />
 
         {/* Members */}
-        <ul className="flex flex-col gap-[0.7cqw]">
+        <ul className="flex flex-col gap-[calc(0.7*var(--mu))]">
           {MEMBERS.map((m, i) => {
             const status = STATUS_ORDER[statusIdx[i]];
             const s = STATUS_STYLES[status];
@@ -169,7 +174,7 @@ export function VisibilityMockup() {
             return (
               <li
                 key={m.name}
-                className="flex items-center gap-[1.5cqw] rounded-[1.6cqw] p-[0.9cqw]"
+                className="flex items-center gap-[calc(1.5*var(--mu))] rounded-[calc(1.6*var(--mu))] p-[calc(0.9*var(--mu))]"
                 style={isYou ? { background: "#EDE9FE" } : undefined}
               >
                 <img
@@ -179,11 +184,11 @@ export function VisibilityMockup() {
                   height={36}
                   loading="lazy"
                   decoding="async"
-                  className="h-[calc(4cqw*var(--ms))] w-[calc(4cqw*var(--ms))] shrink-0 rounded-full border border-[rgba(110,86,207,0.4)] object-cover"
+                  className="h-[calc(4*var(--mu))] w-[calc(4*var(--mu))] shrink-0 rounded-full border border-[rgba(110,86,207,0.4)] object-cover"
                 />
-                <div className="flex min-w-0 flex-1 flex-col gap-[0.5cqw]">
+                <div className="flex min-w-0 flex-1 flex-col gap-[calc(0.5*var(--mu))]">
                   <span
-                    className={`truncate text-[calc(1.75cqw*var(--ms))] leading-none text-[#4b5563] ${
+                    className={`truncate text-[calc(1.75*var(--mu))] leading-none text-[#4b5563] ${
                       isYou ? "font-bold" : ""
                     }`}
                   >
@@ -195,7 +200,7 @@ export function VisibilityMockup() {
                     <AnimatePresence mode="wait" initial={false}>
                       <motion.span
                         key={status}
-                        className="inline-flex w-fit items-center rounded-[1.6cqw] px-[calc(1cqw*var(--ms))] py-[calc(0.45cqw*var(--ms))] text-[calc(1.4cqw*var(--ms))] leading-none"
+                        className="inline-flex w-fit items-center rounded-[calc(1.6*var(--mu))] px-[calc(1*var(--mu))] py-[calc(0.45*var(--mu))] text-[calc(1.4*var(--mu))] leading-none"
                         style={{ background: s.bg, color: s.color, boxShadow: s.glow }}
                         initial={{ opacity: 0, y: 3, scale: 0.85 }}
                         animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -213,7 +218,7 @@ export function VisibilityMockup() {
         </ul>
 
         {/* Footer */}
-        <div className="mt-[1.8cqw] flex items-center justify-between border-t border-[#e5e7eb] pt-[1.6cqw] text-[calc(1.7cqw*var(--ms))]">
+        <div className="mt-[calc(1.8*var(--mu))] flex items-center justify-between border-t border-[#e5e7eb] pt-[calc(1.6*var(--mu))] text-[calc(1.7*var(--mu))]">
           <span className="text-[#737373]">In deep work</span>
           <span className="font-semibold italic text-[#0b0b0b]">2/5 members</span>
         </div>

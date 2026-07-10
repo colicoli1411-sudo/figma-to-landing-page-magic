@@ -151,8 +151,11 @@ export function Features() {
     <section
       ref={sectionRef}
       id="features"
+      // Transparent on purpose: the shared dot field (routes/index.tsx
+      // SharedDotsGroup) runs behind this section and shows through the faded
+      // top/bottom edges of the gradient wash below; the wash's opaque body
+      // hides the dots through the middle of the section.
       className="relative overflow-hidden"
-      style={{ backgroundColor: "#F8F9FB" }}
     >
       <div ref={innerRef} className="relative w-full py-24 md:py-32">
         {/* Violet gradient wash — faded to transparent at the top/bottom edges so it
@@ -349,7 +352,7 @@ function MobileCarousel() {
                 {/* Portrait on phones — the mockups reflow (see .mockup-inner in
                     styles.css) and need the vertical room; desktop ratio from sm. */}
                 <div
-                  className={`relative mt-auto aspect-[3/4] overflow-hidden rounded-2xl border bg-[#0a0a0e] sm:aspect-[640/457] ${i === selected ? "border-[#6E56CF]" : "border-[#AA99EC]"}`}
+                  className={`relative mt-auto aspect-[2/3] overflow-hidden rounded-2xl border bg-[#0a0a0e] sm:aspect-[640/457] ${i === selected ? "border-[#6E56CF]" : "border-[#AA99EC]"}`}
                   style={{
                     boxShadow:
                       "0 30px 70px -32px rgba(31, 29, 66, 0.45), 0 12px 32px -20px rgba(110, 86, 207, 0.22)",

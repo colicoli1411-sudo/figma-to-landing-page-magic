@@ -7,7 +7,6 @@
 /* Poppins is loaded from Google Fonts in __root.tsx (weights 300-700,
    plus italics). System sans serifs are kept as fallbacks. */
 
-
 @theme inline {
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
@@ -53,8 +52,8 @@
   /* Focus Flow brand tokens (from Figma) */
   --color-bg-primary: #f8f9fb;
   --color-text-primary: #1d1d23;
-  --color-brand: #6E56CF;
-  --color-brand-soft: #E4DEFC;
+  --color-brand: #6e56cf;
+  --color-brand-soft: #e4defc;
   --color-stroke-brand: rgba(110, 86, 207, 0.5);
   --color-glow: rgba(170, 153, 236, 0.4);
 
@@ -62,20 +61,22 @@
      Overrides Tailwind's default vivid violet so every violet-* utility class
      picks up the softer, more premium register. Only the steps used in the app
      are redefined. */
-  --color-violet-100: #EDE9FE;
-  --color-violet-300: #D7CFF9;
-  --color-violet-400: #C4B8F3;
-  --color-violet-500: #8B79E6;
-  --color-violet-700: #6E56CF;
+  --color-violet-100: #ede9fe;
+  --color-violet-300: #d7cff9;
+  --color-violet-400: #c4b8f3;
+  --color-violet-500: #8b79e6;
+  --color-violet-700: #6e56cf;
 
   /* Secondary accent — mint green (matches the "Available" status), reserved
      for secondary/informational moments (never the primary CTA or nav). */
-  --color-accent-mint: #87D4C4;
+  --color-accent-mint: #87d4c4;
   --color-accent-mint-soft: rgba(135, 212, 196, 0.14);
   --color-stroke-mint: rgba(135, 212, 196, 0.45);
   --color-glow-mint: rgba(135, 212, 196, 0.35);
 
-  --font-sans: "Poppins", "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif;
+  --font-sans:
+    "Poppins", "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial,
+    sans-serif;
   /* Editorial display serif for the italic accent words in headings. */
   --font-serif: "Instrument Serif", Georgia, "Times New Roman", serif;
 }
@@ -238,9 +239,11 @@
    border glow; pair with `.glow-border` on an `absolute inset-0` overlay. */
 .glow-border-frame {
   padding: 2px;
-  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
   -webkit-mask-composite: xor;
-          mask-composite: exclude;
+  mask-composite: exclude;
 }
 
 /* Off-screen animation pausing — section roots toggle data-offscreen (via
@@ -311,7 +314,9 @@
   );
   background-size: 55% 100%;
   background-repeat: no-repeat;
-  box-shadow: 0 0 12px rgba(110, 86, 207, 0.6), 0 0 12px rgba(135, 212, 196, 0.35);
+  box-shadow:
+    0 0 12px rgba(110, 86, 207, 0.6),
+    0 0 12px rgba(135, 212, 196, 0.35);
   opacity: 0;
   transition: opacity 0.4s ease;
 }
@@ -413,15 +418,32 @@
 }
 
 /* ── Feature mockups: narrow-card readability ─────────────────────────────
-   The mockups size everything in cqw against the card width, which reads
-   perfectly on the 640px desktop stack but becomes microscopic in the phone
-   carousel. `--ms` is a type/glyph multiplier the mockups bake into their
-   cqw sizes (calc(Xcqw * var(--ms))): 1 on desktop (bit-identical), stepped
-   up as the card narrows. The grid/panel rules reflow dense desktop layouts
-   (3-col app grid, side-by-side charts, 58% panel) to fit the larger type.
+   The mockups size everything in `--mu` — one design unit = 1cqw × --ms —
+   so every element (type, icons, padding, gaps, radii) scales UNIFORMLY.
+   At --ms:1 (desktop, 640px stack) --mu is exactly 1cqw: bit-identical to
+   the original design. As the card narrows --ms steps up, enlarging each
+   product component as an intact proportional replica of its desktop self,
+   while the grid/panel rules reflow the layout (3-col app grid → 2-col,
+   side-by-side charts → stacked, wider Team Flow panel) to fit.
    Queries resolve against each mockup root's container-type:inline-size. */
 .mockup-inner {
   --ms: 1;
+  --mu: calc(1cqw * var(--ms));
+  /* Heavy display weight for the big numeric/heading values. Full-bold on the
+     desktop stack, softened one Poppins step (700→600) once the card scales
+     into the phone carousel, where 700 at the enlarged size reads as chunky. */
+  --mock-bold: 700;
+  /* Type multiplier for the Analytics stat-card hero numbers (32h 15m, …).
+     Matches the original desktop size (2.2), but drops on the phone carousel so
+     the numbers sit clearly below the panel title instead of rivalling it. */
+  --mock-stat: 2.2;
+  /* Main panel-title weight (Integrations / Team Flow / Analytics). One step
+     heavier than the 600 secondary text so the heading leads by weight, not just
+     size. Constant across breakpoints (Poppins ships no weight between 600–700). */
+  --mock-title: 700;
+}
+.mockup-mute-frame {
+  padding: 4cqw 4.5cqw;
 }
 .mockup-grid-apps {
   display: grid;
@@ -436,12 +458,18 @@
 }
 @container (max-width: 560px) {
   .mockup-inner {
-    --ms: 1.35;
+    --ms: 1.08;
+    --mock-bold: 600;
+    --mock-stat: 1.8;
   }
 }
 @container (max-width: 460px) {
   .mockup-inner {
-    --ms: 2.1;
+    --ms: 1.7;
+  }
+  /* Hand the canvas margin back to the 2-col app grid so app names fit. */
+  .mockup-mute-frame {
+    padding-inline: 2.5cqw;
   }
   .mockup-grid-apps {
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -452,10 +480,5 @@
   }
   .mockup-vis-panel {
     width: 76%;
-  }
-}
-@container (max-width: 379px) {
-  .mockup-inner {
-    --ms: 2.35;
   }
 }

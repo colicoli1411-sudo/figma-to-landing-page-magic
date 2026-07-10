@@ -48,8 +48,7 @@ const SEGMENTS = [
 ];
 
 const prefersReduced = () =>
-  typeof window !== "undefined" &&
-  window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
 export function AnalyticsMockup() {
   const [barsOn, setBarsOn] = useState(prefersReduced);
@@ -94,64 +93,85 @@ export function AnalyticsMockup() {
       className="relative h-full w-full overflow-hidden"
       style={{ background: "#F2ECFE", containerType: "inline-size" }}
     >
-      {/* .mockup-inner supplies --ms — a type multiplier that steps up as the
-          card narrows (see styles.css) so the UI stays readable in the phone
-          carousel while staying bit-identical on the 640px desktop stack. */}
-      <div className="mockup-inner absolute inset-0 flex flex-col p-[3cqw]">
-        {/* Header */}
+      {/* .mockup-inner supplies --mu — one design unit (1cqw × --ms, styles.css)
+          applied to EVERY dimension below, so each panel is an exact
+          proportional replica of the 640px desktop design at any card width.
+          Side/bottom frame padding stays in plain cqw (canvas framing); the TOP
+          padding scales with --mu so the header gets proportionally more air on
+          the enlarged mobile card (where plain-cqw framing reads as cramped).
+          The generously tall charts (flex-1) absorb the extra top space. */}
+      <div className="mockup-inner absolute inset-0 flex flex-col px-[3cqw] pb-[2.6cqw] pt-[calc(4*var(--mu))]">
+        {/* Header — title + one-line subtitle, mirroring the Integrations panel. */}
         <div
-          className="flex items-center rounded-[1.4cqw] border border-[#E5E7EB] bg-white px-[2.2cqw] py-[1.4cqw]"
+          className="rounded-[calc(1.4*var(--mu))] border border-[#E5E7EB] bg-white px-[calc(2.2*var(--mu))] py-[calc(1.4*var(--mu))]"
           style={{ boxShadow: CARD_SHADOW }}
         >
-          <span className="text-[calc(2.3cqw*var(--ms))] font-bold leading-none text-[#0B0B0B]">Analytics</span>
+          <span
+            className="block text-[calc(2.3*var(--mu))] leading-none text-[#0B0B0B]"
+            style={{ fontWeight: "var(--mock-title)" }}
+          >
+            Analytics
+          </span>
+          <p className="mt-[calc(1*var(--mu))] text-[calc(1.3*var(--mu))] leading-snug text-[#6B7280]">
+            Track your deep work capacity and where your focus time goes.
+          </p>
         </div>
 
         {/* Tabs + Weekly/Monthly toggle */}
-        <div className="mt-[2cqw] flex items-center justify-between border-b border-[#E5E7EB] pb-[1.2cqw]">
-          <div className="flex items-end gap-[2.4cqw]">
-            <span className="relative pb-[0.6cqw] text-[calc(1.5cqw*var(--ms))] font-semibold text-[#0B0B0B]">
+        <div className="mt-[calc(2*var(--mu))] flex items-center justify-between border-b border-[#E5E7EB] pb-[calc(1.2*var(--mu))]">
+          <div className="flex items-end gap-[calc(2.4*var(--mu))]">
+            <span className="relative pb-[calc(0.6*var(--mu))] text-[calc(1.5*var(--mu))] font-semibold text-[#0B0B0B]">
               My Stats
               <span
-                className="absolute inset-x-0 bottom-0 h-[max(0.2cqw,1.5px)] rounded-full"
+                className="absolute inset-x-0 bottom-0 h-[max(calc(0.2*var(--mu)),1.5px)] rounded-full"
                 style={{ background: BRAND }}
               />
             </span>
-            <span className="text-[calc(1.5cqw*var(--ms))] font-semibold text-[#737373]">Team Insights</span>
+            <span className="text-[calc(1.5*var(--mu))] font-semibold text-[#737373]">
+              Team Insights
+            </span>
           </div>
           <div
-            className="flex items-center gap-[0.4cqw] rounded-[1.2cqw] border border-[#E5E7EB] p-[0.4cqw]"
+            className="flex items-center gap-[calc(0.4*var(--mu))] rounded-[calc(1.2*var(--mu))] border border-[#E5E7EB] p-[calc(0.4*var(--mu))]"
             style={{ background: "#F2ECFE" }}
           >
             <span
-              className="rounded-[0.9cqw] px-[1.5cqw] py-[0.5cqw] text-[calc(1.35cqw*var(--ms))] font-medium text-white"
+              className="rounded-[calc(0.9*var(--mu))] px-[calc(1.5*var(--mu))] py-[calc(0.5*var(--mu))] text-[calc(1.35*var(--mu))] font-medium text-white"
               style={{ background: BRAND, boxShadow: CARD_SHADOW }}
             >
               Weekly
             </span>
-            <span className="rounded-[0.9cqw] px-[1.5cqw] py-[0.5cqw] text-[calc(1.35cqw*var(--ms))] font-medium text-[#737373]">
+            <span className="rounded-[calc(0.9*var(--mu))] px-[calc(1.5*var(--mu))] py-[calc(0.5*var(--mu))] text-[calc(1.35*var(--mu))] font-medium text-[#737373]">
               Monthly
             </span>
           </div>
         </div>
 
         {/* Stat cards */}
-        <div className="mt-[2cqw] grid grid-cols-3 gap-[1.4cqw]">
-          <StatCard Icon={Clock} label="Total Focus Time" value="32h 15m" delta="+12% vs last week" />
+        <div className="mt-[calc(2*var(--mu))] grid grid-cols-3 gap-[calc(1.4*var(--mu))]">
+          <StatCard
+            Icon={Clock}
+            label="Total Focus Time"
+            value="32h 15m"
+            delta="+12% vs last week"
+          />
           <StatCard Icon={CalendarDays} label="Daily Average" value="6h 25m" delta="+5%" />
           <StatCard Icon={Award} label="Focus Score" value="88/100" delta="Excellent" />
         </div>
 
         {/* Charts — side-by-side on desktop, stacked in narrow cards (styles.css) */}
-        <div className="mockup-grid-charts mt-[1.8cqw] min-h-0 flex-1 gap-[1.4cqw]">
+        <div className="mockup-grid-charts mt-[calc(1.8*var(--mu))] min-h-0 flex-1 gap-[calc(1.4*var(--mu))]">
           {/* Focus Trend — bar chart */}
           <div
-            className="flex min-h-0 flex-col rounded-[1.6cqw] border border-[#E5E7EB] bg-white p-[1.8cqw]"
+            className="flex min-h-0 flex-col rounded-[calc(1.6*var(--mu))] border border-[#E5E7EB] bg-white p-[calc(1.8*var(--mu))]"
             style={{ boxShadow: CARD_SHADOW }}
           >
-            <span className="text-[calc(1.5cqw*var(--ms))] font-semibold leading-none text-[#0B0B0B]">Focus Trend</span>
-            <div className="mt-[1.4cqw] flex min-h-0 flex-1 gap-[1cqw]">
+            <span className="text-[calc(1.5*var(--mu))] font-semibold leading-none text-[#0B0B0B]">
+              Focus Trend
+            </span>
+            <div className="mt-[calc(1.4*var(--mu))] flex min-h-0 flex-1 gap-[calc(1*var(--mu))]">
               {/* y-axis */}
-              <div className="flex flex-col justify-between py-[0.2cqw] text-right text-[calc(1cqw*var(--ms))] leading-none text-[#9CA3AF]">
+              <div className="flex flex-col justify-between py-[calc(0.2*var(--mu))] text-right text-[calc(1*var(--mu))] leading-none text-[#9CA3AF]">
                 {[12, 9, 6, 3, 0].map((n) => (
                   <span key={n}>{n}</span>
                 ))}
@@ -165,12 +185,18 @@ export function AnalyticsMockup() {
                   ))}
                 </div>
                 {/* bars */}
-                <div className="relative flex flex-1 items-end justify-between gap-[1.1cqw]">
+                <div className="relative flex flex-1 items-end justify-between gap-[calc(1.1*var(--mu))]">
                   {BARS.map((b, i) => (
-                    <div key={b.label} className="flex h-full flex-1 flex-col items-center justify-end">
-                      <div className="flex w-full items-end justify-center" style={{ height: `${(b.v / Y_MAX) * 100}%` }}>
+                    <div
+                      key={b.label}
+                      className="flex h-full flex-1 flex-col items-center justify-end"
+                    >
+                      <div
+                        className="flex w-full items-end justify-center"
+                        style={{ height: `${(b.v / Y_MAX) * 100}%` }}
+                      >
                         <div
-                          className="w-[80%] rounded-t-[0.5cqw]"
+                          className="w-[80%] rounded-t-[calc(0.5*var(--mu))]"
                           style={{
                             height: "100%",
                             transformOrigin: "bottom",
@@ -186,7 +212,7 @@ export function AnalyticsMockup() {
                   ))}
                 </div>
                 {/* x-axis labels */}
-                <div className="mt-[0.7cqw] flex justify-between gap-[1.1cqw] text-[calc(1.05cqw*var(--ms))] leading-none text-[#9CA3AF]">
+                <div className="mt-[calc(0.7*var(--mu))] flex justify-between gap-[calc(1.1*var(--mu))] text-[calc(1.05*var(--mu))] leading-none text-[#9CA3AF]">
                   {BARS.map((b) => (
                     <span key={b.label} className="flex-1 text-center">
                       {b.label}
@@ -199,28 +225,30 @@ export function AnalyticsMockup() {
 
           {/* Distraction Breakdown — donut + legend */}
           <div
-            className="flex min-h-0 flex-col rounded-[1.6cqw] border border-[#E5E7EB] bg-white p-[1.8cqw]"
+            className="flex min-h-0 flex-col rounded-[calc(1.6*var(--mu))] border border-[#E5E7EB] bg-white p-[calc(1.8*var(--mu))]"
             style={{ boxShadow: CARD_SHADOW }}
           >
-            <span className="text-[calc(1.5cqw*var(--ms))] font-semibold leading-none text-[#0B0B0B]">
+            <span className="text-[calc(1.5*var(--mu))] font-semibold leading-none text-[#0B0B0B]">
               Distraction Breakdown
             </span>
-            <div className="mt-[1cqw] flex min-h-0 flex-1 items-center gap-[2cqw]">
+            <div className="mt-[calc(1*var(--mu))] flex min-h-0 flex-1 items-center gap-[calc(2*var(--mu))]">
               <Donut on={pieOn} closing={closing} />
-              <ul className="flex flex-col gap-[1cqw]">
+              <ul className="flex flex-col gap-[calc(1*var(--mu))]">
                 {SEGMENTS.map((s) => (
-                  <li key={s.label} className="flex items-center gap-[1cqw]">
+                  <li key={s.label} className="flex items-center gap-[calc(1*var(--mu))]">
                     <span
                       className="shrink-0 rounded-full"
                       style={{
-                        width: "calc(1.1cqw * var(--ms))",
-                        height: "calc(1.1cqw * var(--ms))",
+                        width: "calc(1.1 * var(--mu))",
+                        height: "calc(1.1 * var(--mu))",
                         background: s.color,
                       }}
                     />
                     <div className="flex flex-col leading-none">
-                      <span className="text-[calc(1.2cqw*var(--ms))] text-[#0B0B0B]">{s.label}</span>
-                      <span className="mt-[0.3cqw] text-[calc(1.05cqw*var(--ms))] text-[#737373]">{s.pct}%</span>
+                      <span className="text-[calc(1.2*var(--mu))] text-[#0B0B0B]">{s.label}</span>
+                      <span className="mt-[calc(0.3*var(--mu))] text-[calc(1.05*var(--mu))] text-[#737373]">
+                        {s.pct}%
+                      </span>
                     </div>
                   </li>
                 ))}
@@ -246,30 +274,41 @@ function StatCard({
 }) {
   return (
     <div
-      className="flex flex-col rounded-[1.6cqw] border border-[#E5E7EB] bg-white p-[1.6cqw]"
+      className="flex flex-col rounded-[calc(1.6*var(--mu))] border border-[#E5E7EB] bg-white p-[calc(1.6*var(--mu))]"
       style={{ boxShadow: CARD_SHADOW }}
     >
       <div className="flex items-start justify-between">
         <div className="flex flex-col">
-          <span className="text-[calc(1.2cqw*var(--ms))] leading-tight text-[#737373]">{label}</span>
-          <span className="mt-[0.8cqw] text-[calc(2.2cqw*var(--ms))] font-bold leading-none text-[#0B0B0B]">
+          <span className="text-[calc(1.2*var(--mu))] leading-tight text-[#737373]">{label}</span>
+          <span
+            className="mt-[calc(0.8*var(--mu))] text-[calc(var(--mock-stat)*var(--mu))] leading-none text-[#0B0B0B]"
+            style={{ fontWeight: "var(--mock-bold)" }}
+          >
             {value}
           </span>
         </div>
         <span
-          className="flex shrink-0 items-center justify-center rounded-[1cqw]"
+          className="flex shrink-0 items-center justify-center rounded-[calc(1*var(--mu))]"
           style={{
-            width: "calc(3.4cqw * var(--ms))",
-            height: "calc(3.4cqw * var(--ms))",
+            width: "calc(3.4 * var(--mu))",
+            height: "calc(3.4 * var(--mu))",
             background: "rgba(110,86,207,0.1)",
           }}
         >
-          <Icon className="text-[#6E56CF]" strokeWidth={2} />
+          {/* 3.75 units = the 24px lucide default at the 640px reference width,
+              so desktop is unchanged and narrow cards scale it with the tile. */}
+          <Icon
+            className="h-[calc(3.75*var(--mu))] w-[calc(3.75*var(--mu))] text-[#6E56CF]"
+            strokeWidth={2}
+          />
         </span>
       </div>
-      <div className="mt-[1.1cqw] flex items-center gap-[0.6cqw]" style={{ color: GREEN }}>
-        <TrendingUp className="h-[calc(1.4cqw*var(--ms))] w-[calc(1.4cqw*var(--ms))]" strokeWidth={2.5} />
-        <span className="text-[calc(1.2cqw*var(--ms))] font-medium leading-none">{delta}</span>
+      <div
+        className="mt-[calc(1.1*var(--mu))] flex items-center gap-[calc(0.6*var(--mu))]"
+        style={{ color: GREEN }}
+      >
+        <TrendingUp className="h-[calc(1.4*var(--mu))] w-[calc(1.4*var(--mu))]" strokeWidth={2.5} />
+        <span className="text-[calc(1.2*var(--mu))] font-medium leading-none">{delta}</span>
       </div>
     </div>
   );
