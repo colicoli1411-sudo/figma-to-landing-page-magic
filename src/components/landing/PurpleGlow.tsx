@@ -17,10 +17,15 @@ export function PurpleGlow() {
 
   return (
     <div aria-hidden className="pointer-events-none absolute inset-0">
-      {/* Top glow — behind the headline */}
+      {/* Top glow — behind the headline.
+          Mobile uses its own compact, viewport-relative box: the desktop
+          1900px width is ~5× a 375px phone, so the fixed-px washes spilled
+          far past the (much shorter) mobile hero. These smaller boxes keep
+          desktop's ~1.3× viewport-width coverage proportion but stay
+          centered inside the hero. */}
       <div
-        className={`absolute left-1/2 top-[280px] h-[720px] w-[1900px] -translate-x-1/2 opacity-70 ${
-          isMobile ? "" : "blur-[120px]"
+        className={`absolute left-1/2 -translate-x-1/2 opacity-70 ${
+          isMobile ? "top-[60px] h-[520px] w-[460px]" : "top-[280px] h-[720px] w-[1900px] blur-[120px]"
         }`}
         style={{
           background: isMobile
@@ -33,8 +38,8 @@ export function PurpleGlow() {
           page background (a mask's gradient only ever affects alpha, never
           hue, so the "colour" of a fade has to come from what sits behind it). */}
       <div
-        className={`absolute left-1/2 top-[880px] h-[660px] w-[1900px] -translate-x-1/2 opacity-80 ${
-          isMobile ? "" : "blur-[140px]"
+        className={`absolute left-1/2 -translate-x-1/2 opacity-80 ${
+          isMobile ? "top-[540px] h-[520px] w-[520px]" : "top-[880px] h-[660px] w-[1900px] blur-[140px]"
         }`}
         style={{
           background: isMobile
@@ -46,8 +51,8 @@ export function PurpleGlow() {
           violet. Sits bottom-left of the mockup band so it reads mint on the
           bottom/left, violet on the right. */}
       <div
-        className={`absolute left-[4%] top-[560px] h-[720px] w-[980px] opacity-90 ${
-          isMobile ? "" : "blur-[120px]"
+        className={`absolute opacity-90 ${
+          isMobile ? "left-[-8%] top-[600px] h-[420px] w-[360px]" : "left-[4%] top-[560px] h-[720px] w-[980px] blur-[120px]"
         }`}
         style={{
           background: isMobile
@@ -57,8 +62,8 @@ export function PurpleGlow() {
       />
       {/* Faint mint rim along the bottom of the headline glow band — adds cool depth. */}
       <div
-        className={`absolute left-1/2 top-[740px] h-[300px] w-[1400px] -translate-x-1/2 opacity-60 ${
-          isMobile ? "" : "blur-[120px]"
+        className={`absolute left-1/2 -translate-x-1/2 opacity-60 ${
+          isMobile ? "top-[440px] h-[220px] w-[380px]" : "top-[740px] h-[300px] w-[1400px] blur-[120px]"
         }`}
         style={{
           background: isMobile
