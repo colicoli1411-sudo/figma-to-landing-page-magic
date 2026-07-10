@@ -5,7 +5,6 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { Header } from "@/components/landing/Header";
 import { Hero } from "@/components/landing/Hero";
 import { ContextSwitching } from "@/components/landing/ContextSwitching";
-import DotField from "@/components/landing/DotField";
 import { SiteGradualBlur } from "@/components/landing/SiteGradualBlur";
 import { PageLoader } from "@/components/landing/PageLoader";
 import { scheduleStRefresh } from "@/lib/scrolltrigger-refresh";
@@ -89,34 +88,31 @@ function LazySection({ minHeight, children }: { minHeight: number; children: Rea
   );
 }
 
-/** A single dot-field + #F8F9FB base shared behind a run of sections, so the
+/** A single dot pattern + #F8F9FB base shared behind a run of sections, so the
  *  dots read as one continuous field across their boundaries instead of each
  *  section being individually dotted-or-not. Full-strength to every edge (no
  *  fade), so the dots meet the neighbouring sections without a blank/white gap —
- *  neighbours are either dark (Pricing) or carry their own gradient (Features). */
+ *  neighbours are either dark (Pricing) or carry their own gradient (Features).
+ *
+ *  Drawn with a tiled CSS radial-gradient, NOT a DotField canvas: a group this
+ *  tall (hero → ROI plus Features' ~1800px pin-spacer) made the canvas buffer
+ *  ~8000px × dpr — past the GPU's texture ceiling — so the browser software-
+ *  rasterized a multi-megapixel layer behind the pinned Features scrub and the
+ *  card animations janked. The dots are static and single-coloured (uniform
+ *  brand violet, matching the top of the hero), so a native repeating gradient
+ *  is visually identical at effectively zero cost. Geometry mirrors DotField's
+ *  defaults: dotRadius 1.5 → 0.75px drawn radius, 15.5px cell (radius+spacing). */
 function SharedDotsGroup({ children }: { children: ReactNode }) {
   return (
     <div className="relative" style={{ backgroundColor: "#F8F9FB" }}>
-      <div aria-hidden className="pointer-events-none absolute inset-0">
-        <DotField
-          dotRadius={1.5}
-          dotSpacing={14}
-          bulgeStrength={0}
-          glowRadius={0}
-          sparkle={false}
-          waveAmplitude={0}
-          cursorRadius={0}
-          cursorForce={0}
-          // Uniform dot colour: DotField's default gradientTo is a 25%-alpha
-          // lavender, and across a canvas this tall (several sections) the
-          // diagonal fade left the lower sections' dots nearly invisible.
-          // Locking both stops to the brand violet keeps every dot as
-          // dominant as the ones at the top of the hero.
-          gradientFrom="#6E56CF"
-          gradientTo="#6E56CF"
-          glowColor="#fcfbff"
-        />
-      </div>
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0"
+        style={{
+          backgroundImage: "radial-gradient(circle, #6E56CF 0.75px, transparent 1px)",
+          backgroundSize: "15.5px 15.5px",
+        }}
+      />
       {children}
     </div>
   );
